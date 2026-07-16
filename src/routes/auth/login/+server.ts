@@ -22,10 +22,13 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	failure.searchParams.set('error', 'oauth_failed');
 
 	const { account } = createGuestClient();
+	// Minimum viable scope: read:user grants public profile + own aggregate
+	// contribution data. No repo access, no code, ever.
 	const redirectUrl = await account.createOAuth2Token({
 		provider: OAuthProvider.Github,
 		success: callback.toString(),
-		failure: failure.toString()
+		failure: failure.toString(),
+		scopes: ['read:user']
 	});
 	redirect(302, redirectUrl);
 };

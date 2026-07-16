@@ -88,6 +88,16 @@
 		gap: 0.75rem;
 	}
 
+	.who > div {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.name,
+	.handle {
+		overflow-wrap: anywhere;
+	}
+
 	.who img {
 		width: 3rem;
 		height: 3rem;

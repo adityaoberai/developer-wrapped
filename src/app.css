@@ -95,12 +95,13 @@ h3 {
 	transform: translateY(0);
 }
 
-/* Layout shell: phone-first column that simply widens on desktop. */
+/* Layout shell: phone-first column that simply widens on desktop.
+   Padding respects notches/rounded corners on full-bleed phones. */
 .shell {
 	width: 100%;
 	max-width: var(--shell-width);
 	margin-inline: auto;
-	padding-inline: 1.25rem;
+	padding-inline: max(1.25rem, env(safe-area-inset-left)) max(1.25rem, env(safe-area-inset-right));
 }
 
 .shell--wide {
@@ -125,6 +126,7 @@ h3 {
 	cursor: pointer;
 	text-decoration: none;
 	text-align: center;
+	overflow-wrap: anywhere;
 	transition:
 		transform 120ms ease,
 		background 120ms ease,

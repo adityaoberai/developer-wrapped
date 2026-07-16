@@ -9,7 +9,7 @@
 
 <Seo
 	title="Developer Wrapped — What kind of developer are you, really?"
-	description="Find out what kind of developer you really are in eight uncomfortably accurate questions. Sign in with GitHub, get roasted, share the damage."
+	description="Your last 12 months on GitHub, turned into an uncomfortably accurate story. Sign in with GitHub, see the evidence, get roasted, share the damage."
 />
 
 <main id="main-content" class="screen shell" tabindex="-1">
@@ -17,7 +17,8 @@
 		<p class="eyebrow">Developer Wrapped</p>
 		<h1>What kind of developer are you, <em>really?</em></h1>
 		<p class="sub muted">
-			Eight uncomfortably accurate questions. One dramatic diagnosis. Zero unit tests.
+			Your last 12 months on GitHub, turned into a story with receipts — plus eight uncomfortably
+			accurate questions, if you dare.
 		</p>
 	</header>
 
@@ -41,8 +42,11 @@
 
 	<footer class="trust muted">
 		<p>
-			Powered by <a href="https://appwrite.io" rel="noreferrer">Appwrite</a> Auth, Databases & Realtime.
-			We only ever store your public GitHub profile — never your code, never your tokens.
+			Powered by <a href="https://appwrite.io" rel="noreferrer">Appwrite</a> Auth, Databases &
+			Realtime. Signing in asks GitHub for read-only profile access (<code>read:user</code>). We
+			store your public profile and aggregate contribution counts for the exact period shown — never
+			your code, repository contents, or tokens. Everything stays private until you explicitly
+			publish it, and published pages show only the stats you chose to share.
 		</p>
 	</footer>
 </main>

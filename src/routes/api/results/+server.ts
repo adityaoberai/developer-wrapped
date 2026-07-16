@@ -74,8 +74,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	if (body.is_public !== undefined && typeof body.is_public !== 'boolean') {
 		error(400, 'is_public must be a boolean.');
 	}
-	// A retake must not silently undo the owner's existing privacy choice.
-	const isPublic = existing ? Boolean(existing.is_public) : (body.is_public ?? true);
+	// Private by default: results only become public through the explicit
+	// publish step. A retake must not silently undo an existing privacy choice.
+	const isPublic = existing ? Boolean(existing.is_public) : (body.is_public ?? false);
 	const completedAt = new Date().toISOString();
 
 	// Identity comes from the OAuth session, not the request body, so public

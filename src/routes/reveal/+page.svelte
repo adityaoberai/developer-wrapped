@@ -50,7 +50,8 @@
 				secondary_archetype_id: secondary,
 				scores_json: JSON.stringify(scores),
 				share_slug: randomSlug(),
-				is_public: true,
+				// Private by default — publishing is an explicit step on the result page.
+				is_public: false,
 				completed_at: new Date().toISOString()
 			})
 		});

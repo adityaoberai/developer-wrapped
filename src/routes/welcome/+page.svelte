@@ -33,21 +33,24 @@
 		<p class="eyebrow">Well, well, well</p>
 		<h1>Hey, {data.profile.display_name || data.profile.github_username || 'developer'} 👋</h1>
 		<p class="muted lead">
-			Eight questions stand between you and a diagnosis you didn't ask for. Answer honestly — the
-			quiz can tell when you're lying. It takes about two minutes, and your progress saves as you
-			go.
+			Your last 12 months on GitHub are about to testify. We collect aggregate contribution counts
+			for an exact period — never your code — and everything stays private until you choose to
+			publish it. The quiz is optional, judgmental, and two minutes long.
 		</p>
 
 		<div class="actions">
+			<a class="btn" href="/wrapped">See my Wrapped</a>
 			{#if resuming}
-				<a class="btn" href="/quiz"
+				<a class="btn btn--subtle" href="/quiz"
 					>Resume quiz ({data.answeredCount}/{data.totalQuestions} answered)</a
 				>
 			{:else}
-				<a class="btn" href="/quiz">{data.currentResult ? 'Retake the quiz' : 'Start the quiz'}</a>
+				<a class="btn btn--subtle" href="/quiz"
+					>{data.currentResult ? 'Retake the quiz' : 'Take the quiz'}</a
+				>
 			{/if}
 			{#if data.currentResult}
-				<a class="btn btn--ghost" href="/r/{data.currentResult.share_slug}">See my last result</a>
+				<a class="btn btn--ghost" href="/r/{data.currentResult.share_slug}">See my quiz result</a>
 			{/if}
 		</div>
 
@@ -83,6 +86,8 @@
 	h1 {
 		font-size: clamp(1.75rem, 7vw, 2.375rem);
 		font-weight: 900;
+		max-width: 100%;
+		overflow-wrap: anywhere;
 	}
 
 	.lead {

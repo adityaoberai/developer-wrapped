@@ -20,6 +20,7 @@
 	} as const;
 
 	onMount(() => {
+		let destroyed = false;
 		let cleanup = () => {};
 
 		(async () => {
@@ -36,32 +37,47 @@
 				realtime.onError(() => (status = 'offline'));
 
 				const subscription = await realtime.subscribe(
-					Channel.tablesdb('wrapped').table('results').row(),
+					Channel.tablesdb('wrapped').table('public_shares').row(),
 					(event) => {
 						if (!event.events.some((name) => name.endsWith('.create'))) return;
 						const row = event.payload as Record<string, unknown>;
-						if (!row.is_public) return;
+						let contributions: number;
+						try {
+							contributions = (JSON.parse(row.metrics_json as string) as { contributions: number })
+								.contributions;
+						} catch {
+							return;
+						}
 						const item: FeedItem = {
 							share_slug: row.share_slug as string,
 							display_name: (row.display_name as string) ?? '',
 							github_username: (row.github_username as string) ?? '',
 							avatar_url: (row.avatar_url as string) ?? '',
-							archetype_id: row.archetype_id as ArchetypeId,
-							completed_at: row.completed_at as string
+							archetype_id: (row.archetype_id as ArchetypeId) || null,
+							contributions,
+							published_at: row.published_at as string
 						};
 						items = [item, ...items.filter((i) => i.share_slug !== item.share_slug)].slice(0, 30);
 					}
 				);
+				// The component may have unmounted while subscribe() was in flight.
+				if (destroyed) {
+					subscription.close().catch(() => {});
+					return;
+				}
 				status = 'live';
 				cleanup = () => {
 					subscription.close().catch(() => {});
 				};
 			} catch {
-				status = 'offline';
+				if (!destroyed) status = 'offline';
 			}
 		})();
 
-		return () => cleanup();
+		return () => {
+			destroyed = true;
+			cleanup();
+		};
 	});
 
 	function timeAgo(iso: string): string {
@@ -93,14 +109,14 @@
 
 	{#if items.length === 0}
 		<p class="empty muted">
-			Nobody has been diagnosed yet. <a href="/">Be the first</a> — set the tone for everyone else.
+			Nobody has published a Wrapped yet. <a href="/">Be the first</a> — set the tone for everyone else.
 		</p>
 	{:else}
 		<ul class="feed" aria-live="polite" aria-relevant="additions">
 			{#each items as item (item.share_slug)}
-				{@const archetype = getArchetype(item.archetype_id)}
+				{@const archetype = item.archetype_id ? getArchetype(item.archetype_id) : null}
 				<li class="fade-up">
-					<a class="entry" href="/r/{item.share_slug}">
+					<a class="entry" href="/w/{item.share_slug}">
 						{#if item.avatar_url}
 							<img
 								src={item.avatar_url}
@@ -111,17 +127,19 @@
 								referrerpolicy="no-referrer"
 							/>
 						{:else}
-							<span class="fallback-avatar" aria-hidden="true">{archetype.emoji}</span>
+							<span class="fallback-avatar" aria-hidden="true">{archetype?.emoji ?? '📦'}</span>
 						{/if}
 						<div class="entry-text">
 							<p>
 								<strong>{item.display_name || item.github_username || 'Someone'}</strong>
-								is {archetype.name}
-								{archetype.emoji}
+								shipped {item.contributions.toLocaleString('en-US')} contributions
+								{#if archetype}
+									as {archetype.name} {archetype.emoji}
+								{/if}
 							</p>
 							<p class="meta muted">
 								{#if item.github_username}@{item.github_username} ·{/if}
-								<time datetime={item.completed_at}>{timeAgo(item.completed_at)}</time>
+								<time datetime={item.published_at}>{timeAgo(item.published_at)}</time>
 							</p>
 						</div>
 					</a>
@@ -243,8 +261,13 @@
 		font-size: 1.25rem;
 	}
 
+	.entry-text {
+		min-width: 0;
+	}
+
 	.entry-text p {
 		line-height: 1.35;
+		overflow-wrap: anywhere;
 	}
 
 	.meta {
