@@ -1,0 +1,238 @@
+[
+	{
+		"id": "q1",
+		"position": 1,
+		"prompt": "It's 4:58 PM on a Friday. Your fix is ready. What do you do?",
+		"options": [
+			{ "id": "a", "emoji": "🚀", "label": "Ship it. The weekend fears me." },
+			{
+				"id": "b",
+				"emoji": "🖋️",
+				"label": "Hold it until Monday — I want to rewrite it beautifully first."
+			},
+			{
+				"id": "c",
+				"emoji": "🚩",
+				"label": "Wrap it in a feature flag I will never remove, then ship."
+			},
+			{
+				"id": "d",
+				"emoji": "🤖",
+				"label": "Push the branch. The pipeline decides my weekend, not me."
+			}
+		],
+		"weights": {
+			"a": { "productionCowboy": 3, "ductTapeAlchemist": 1 },
+			"b": { "refactorPoet": 3, "darkModeMonk": 1 },
+			"c": { "ductTapeAlchemist": 3, "productionCowboy": 1 },
+			"d": { "pipelineWhisperer": 3, "astronautArchitect": 1 }
+		}
+	},
+	{
+		"id": "q2",
+		"position": 2,
+		"prompt": "There's a bug in production. Your first move?",
+		"options": [
+			{
+				"id": "a",
+				"emoji": "🖨️",
+				"label": "console.log('HERE'), console.log('HERE 2'), console.log('WHY')"
+			},
+			{
+				"id": "b",
+				"emoji": "🔍",
+				"label": "Open every related Stack Overflow thread since 2013. All of them."
+			},
+			{
+				"id": "c",
+				"emoji": "💬",
+				"label": "Paste the stack trace into a chat window and await enlightenment."
+			},
+			{
+				"id": "d",
+				"emoji": "📈",
+				"label": "Check the dashboards. If it's not on a graph, it's not real."
+			}
+		],
+		"weights": {
+			"a": { "ductTapeAlchemist": 3, "productionCowboy": 1 },
+			"b": { "tabHoarder": 3, "vibeCoder": 1 },
+			"c": { "vibeCoder": 3, "tabHoarder": 1 },
+			"d": { "pipelineWhisperer": 3, "astronautArchitect": 1 }
+		}
+	},
+	{
+		"id": "q3",
+		"position": 3,
+		"prompt": "Your weekend side project needs a database. You pick…",
+		"options": [
+			{
+				"id": "a",
+				"emoji": "🗺️",
+				"label": "Postgres, Redis, a queue, and an architecture diagram with 11 boxes."
+			},
+			{
+				"id": "b",
+				"emoji": "📄",
+				"label": "A JSON file named final_v2_REAL.json. It has held for years."
+			},
+			{
+				"id": "c",
+				"emoji": "🧭",
+				"label": "Whatever the tutorial in tab 47 used. Tab 63 had a good one too."
+			},
+			{
+				"id": "d",
+				"emoji": "🎨",
+				"label": "Unclear — I spent the weekend theming my terminal instead."
+			}
+		],
+		"weights": {
+			"a": { "astronautArchitect": 3, "pipelineWhisperer": 1 },
+			"b": { "ductTapeAlchemist": 3, "productionCowboy": 1 },
+			"c": { "tabHoarder": 3, "vibeCoder": 1 },
+			"d": { "darkModeMonk": 3, "refactorPoet": 1 }
+		}
+	},
+	{
+		"id": "q4",
+		"position": 4,
+		"prompt": "Describe your editor setup.",
+		"options": [
+			{
+				"id": "a",
+				"emoji": "⌨️",
+				"label": "An AI IDE that autocompletes my thoughts. I mostly press Tab."
+			},
+			{ "id": "b", "emoji": "🧠", "label": "Neovim. 600 lines of config. I am at peace." },
+			{
+				"id": "c",
+				"emoji": "🧩",
+				"label": "VS Code with 58 extensions. Three of them are fighting each other."
+			},
+			{
+				"id": "d",
+				"emoji": "📦",
+				"label": "A devcontainer so reproducible it would run on my toaster."
+			}
+		],
+		"weights": {
+			"a": { "vibeCoder": 3, "tabHoarder": 1 },
+			"b": { "darkModeMonk": 3, "refactorPoet": 1 },
+			"c": { "tabHoarder": 3, "vibeCoder": 1 },
+			"d": { "pipelineWhisperer": 3, "astronautArchitect": 1 }
+		}
+	},
+	{
+		"id": "q5",
+		"position": 5,
+		"prompt": "Be honest: how many browser tabs are open right now?",
+		"options": [
+			{ "id": "a", "emoji": "🕊️", "label": "Single digits. Closing tabs is a spiritual practice." },
+			{
+				"id": "b",
+				"emoji": "🌋",
+				"label": "Three windows. 60+ tabs. Every single one is load-bearing."
+			},
+			{
+				"id": "c",
+				"emoji": "🔮",
+				"label": "Zero docs tabs — the model reads the docs so I don't have to."
+			},
+			{
+				"id": "d",
+				"emoji": "🟢",
+				"label": "One pinned tab: the CI dashboard. Green means happiness."
+			}
+		],
+		"weights": {
+			"a": { "darkModeMonk": 3, "refactorPoet": 1 },
+			"b": { "tabHoarder": 3, "vibeCoder": 1 },
+			"c": { "vibeCoder": 3, "tabHoarder": 1 },
+			"d": { "pipelineWhisperer": 3, "astronautArchitect": 1 }
+		}
+	},
+	{
+		"id": "q6",
+		"position": 6,
+		"prompt": "A teammate sends you a 2,000-line PR to review. You…",
+		"options": [
+			{
+				"id": "a",
+				"emoji": "📱",
+				"label": "'LGTM 🚀' — sent from my phone, 40 seconds after they asked."
+			},
+			{
+				"id": "b",
+				"emoji": "✍️",
+				"label": "Leave 74 comments. 71 are about naming. All of them are correct."
+			},
+			{
+				"id": "c",
+				"emoji": "🏗️",
+				"label": "Reject it. This clearly should have been five separate services."
+			},
+			{
+				"id": "d",
+				"emoji": "🧾",
+				"label": "Summarize it with AI, review the summary, approve the vibes."
+			}
+		],
+		"weights": {
+			"a": { "productionCowboy": 3, "ductTapeAlchemist": 1 },
+			"b": { "refactorPoet": 3, "darkModeMonk": 1 },
+			"c": { "astronautArchitect": 3, "pipelineWhisperer": 1 },
+			"d": { "vibeCoder": 3, "tabHoarder": 1 }
+		}
+	},
+	{
+		"id": "q7",
+		"position": 7,
+		"prompt": "Your personal definition of 'done' is…",
+		"options": [
+			{ "id": "a", "emoji": "🎲", "label": "It ran once on my machine. Ship it." },
+			{ "id": "b", "emoji": "♻️", "label": "After one more tiny refactor. And maybe one more." },
+			{
+				"id": "c",
+				"emoji": "🛰️",
+				"label": "When it scales to a million users. We currently have nine."
+			},
+			{
+				"id": "d",
+				"emoji": "🖼️",
+				"label": "When the code is aligned. Visually. In my custom font."
+			}
+		],
+		"weights": {
+			"a": { "productionCowboy": 3, "ductTapeAlchemist": 1 },
+			"b": { "refactorPoet": 3, "darkModeMonk": 1 },
+			"c": { "astronautArchitect": 3, "pipelineWhisperer": 1 },
+			"d": { "darkModeMonk": 3, "refactorPoet": 1 }
+		}
+	},
+	{
+		"id": "q8",
+		"position": 8,
+		"prompt": "What happens to your TODO comments?",
+		"options": [
+			{ "id": "a", "emoji": "🔥", "label": "TODO? That's future me's production incident." },
+			{
+				"id": "b",
+				"emoji": "🚑",
+				"label": "I fix them immediately. An open TODO is an open wound."
+			},
+			{
+				"id": "c",
+				"emoji": "📚",
+				"label": "They graduate into tickets, then epics, then a design doc nobody reads."
+			},
+			{ "id": "d", "emoji": "🏛️", "label": "// TODO: fix this properly (2021). It has tenure now." }
+		],
+		"weights": {
+			"a": { "productionCowboy": 3, "ductTapeAlchemist": 1 },
+			"b": { "refactorPoet": 3, "darkModeMonk": 1 },
+			"c": { "astronautArchitect": 3, "pipelineWhisperer": 1 },
+			"d": { "ductTapeAlchemist": 3, "productionCowboy": 1 }
+		}
+	}
+]

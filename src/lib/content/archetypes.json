@@ -1,0 +1,114 @@
+[
+	{
+		"id": "productionCowboy",
+		"name": "The Production Cowboy",
+		"tagline": "Deploys on Friday at 4:59 PM. Sleeps like a baby.",
+		"roast": "You've never met a Friday deploy you didn't like. Tests are for people who doubt themselves — and you have never doubted anything in your life. Your users are your QA team; they just don't know it yet.",
+		"traits": [
+			"Ships first, asks questions never",
+			"Believes staging is a state of mind",
+			"Rollback plan: vibes"
+		],
+		"emoji": "🤠",
+		"gradient": ["#F97316", "#DC2626"],
+		"priority": 1
+	},
+	{
+		"id": "refactorPoet",
+		"name": "The Refactor Poet",
+		"tagline": "It worked fine. That was the problem.",
+		"roast": "The feature shipped three weeks ago, but you're still in there, renaming data to payload to envelope and back to data. You don't write code — you curate it. Somewhere, a product manager is quietly crying.",
+		"traits": [
+			"Renames variables for emotional clarity",
+			"Strong opinions about whitespace",
+			"PRs are 90% 'no functional changes'"
+		],
+		"emoji": "🪶",
+		"gradient": ["#7C3AED", "#DB2777"],
+		"priority": 2
+	},
+	{
+		"id": "astronautArchitect",
+		"name": "The Astronaut Architect",
+		"tagline": "Your todo app has a service mesh.",
+		"roast": "You heard 'simple CRUD app' and built an event-driven microservice constellation with its own service registry. It's beautiful. It's infinitely scalable. It has zero users and eleven READMEs.",
+		"traits": [
+			"Abstracts things that happen once",
+			"Draws diagrams nobody asked for",
+			"Solves problems from the year 2031"
+		],
+		"emoji": "🧑‍🚀",
+		"gradient": ["#4F46E5", "#7C3AED"],
+		"priority": 3
+	},
+	{
+		"id": "ductTapeAlchemist",
+		"name": "The Duct Tape Alchemist",
+		"tagline": "// TODO: fix this properly (added 2021)",
+		"roast": "Your codebase is 40% genius and 60% apology comments. That 'temporary' workaround from 2021 now has seniority over half the team. If it's stupid and it works, you've built an entire career on it.",
+		"traits": [
+			"Turns hacks into load-bearing infrastructure",
+			"setTimeout is a synchronization strategy",
+			"Comments that apologize in advance"
+		],
+		"emoji": "🩹",
+		"gradient": ["#F59E0B", "#F97316"],
+		"priority": 4
+	},
+	{
+		"id": "tabHoarder",
+		"name": "The Tab Hoarder",
+		"tagline": "Chrome asked for mercy. You opened a new window.",
+		"roast": "You have 247 tabs open and you need every single one. Somewhere in window four is the answer to a bug you fixed last sprint. Closing a tab feels like deleting a memory. Your laptop fan has opinions.",
+		"traits": [
+			"Researches everything, closes nothing",
+			"14 tabs of the same Stack Overflow answer",
+			"Treats RAM as a suggestion"
+		],
+		"emoji": "🗂️",
+		"gradient": ["#0EA5E9", "#4F46E5"],
+		"priority": 5
+	},
+	{
+		"id": "darkModeMonk",
+		"name": "The Dark Mode Monk",
+		"tagline": "More commits in dotfiles than in projects.",
+		"roast": "Your terminal has a custom prompt, your keyboard is ortholinear, and picking your editor theme took longer than picking your last job. You have achieved perfect developer ergonomics. Now you just need something to develop.",
+		"traits": [
+			"The dotfiles are the magnum opus",
+			"Judges your font choices silently",
+			"Productivity tools outnumber products"
+		],
+		"emoji": "🧘",
+		"gradient": ["#475569", "#1E293B"],
+		"priority": 6
+	},
+	{
+		"id": "pipelineWhisperer",
+		"name": "The Pipeline Whisperer",
+		"tagline": "Spent six hours automating a four-second task.",
+		"roast": "You've automated your builds, your deploys, your commit messages, and — quietly — parts of your personality. The pipeline is green, the YAML is immaculate, and nobody, including you, remembers what the product does.",
+		"traits": [
+			"Speaks fluent YAML",
+			"CI is green or life is meaningless",
+			"Automated their own standup update"
+		],
+		"emoji": "🪄",
+		"gradient": ["#22C55E", "#0EA5E9"],
+		"priority": 7
+	},
+	{
+		"id": "vibeCoder",
+		"name": "The Vibe Coder",
+		"tagline": "Their best pair programmer bills by the token.",
+		"roast": "You describe, it generates, you ship. Reading the code is a formality you've streamlined away. When someone asks how it works, you say 'elegantly.' And honestly? It usually does. Nobody knows why.",
+		"traits": [
+			"Prompts more than they type",
+			"Code review means asking the model twice",
+			"Ships fast, reads the diff later. Maybe."
+		],
+		"emoji": "✨",
+		"gradient": ["#DB2777", "#7C3AED"],
+		"priority": 8
+	}
+]
