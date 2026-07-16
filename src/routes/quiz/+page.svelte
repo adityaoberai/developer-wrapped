@@ -22,7 +22,17 @@
 	const firstUnanswered = questions.findIndex((q) => !selections[q.id]);
 	let index = $state(firstUnanswered === -1 ? 0 : firstUnanswered);
 	let saveError = $state(false);
+	let finishing = $state(false);
 	let advanceTimer: ReturnType<typeof setTimeout> | undefined;
+	// Monotonic token per question so a stale save failure can never clobber a
+	// newer selection the user made in the meantime.
+	let saveSeq = 0;
+	const latestSave: Record<string, number> = {};
+	// Every in-flight (or settled) save, keyed by question. Navigating to the
+	// reveal waits for ALL of them, not just the final question's save, so a
+	// slow earlier save can never be lost behind the redirect.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only, never rendered
+	const pendingSaves = new Map<string, Promise<boolean>>();
 
 	const question = $derived(questions[index]);
 	const answeredCount = $derived(questions.filter((q) => selections[q.id]).length);
@@ -39,10 +49,13 @@
 		const previous = selections[q.id];
 		selections[q.id] = option.id;
 		saveError = false;
+		finishing = false;
 		clearTimeout(advanceTimer);
+		const token = ++saveSeq;
+		latestSave[q.id] = token;
 
 		// Save immediately; the UI is optimistic and reverts on failure.
-		fetch('/api/answers', {
+		const save = fetch('/api/answers', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
@@ -54,20 +67,26 @@
 		})
 			.then((res) => {
 				if (!res.ok) throw new Error(`save failed (${res.status})`);
+				return true;
 			})
 			.catch(() => {
+				// A newer selection for this question owns the state now.
+				if (latestSave[q.id] !== token) return false;
 				clearTimeout(advanceTimer);
+				finishing = false;
 				if (previous) selections[q.id] = previous;
 				else delete selections[q.id];
 				const failedIndex = questions.findIndex((entry) => entry.id === q.id);
 				if (failedIndex !== -1) index = failedIndex;
 				saveError = true;
+				return false;
 			});
 
-		advanceTimer = setTimeout(advance, 450);
+		pendingSaves.set(q.id, save);
+		advanceTimer = setTimeout(() => advance(), 450);
 	}
 
-	function advance() {
+	async function advance() {
 		if (index < total - 1) {
 			index += 1;
 			return;
@@ -77,7 +96,27 @@
 			index = unanswered;
 			return;
 		}
-		goto('/reveal');
+		// Final question: the reveal's server guard re-reads saved answers, so
+		// every save must have landed before navigating. Re-answering during the
+		// wait replaces map entries, so loop until a full snapshot settles clean.
+		finishing = true;
+		for (;;) {
+			const snapshot = [...pendingSaves.values()];
+			const results = await Promise.all(snapshot);
+			if (!results.every(Boolean)) {
+				// A save failed and its catch handler already reverted the answer.
+				finishing = false;
+				return;
+			}
+			const after = [...pendingSaves.values()];
+			if (after.length === snapshot.length && after.every((p, i) => p === snapshot[i])) break;
+		}
+		if (questions.some((q) => !selections[q.id])) {
+			finishing = false;
+			return;
+		}
+		finishing = false;
+		await goto('/reveal');
 	}
 
 	function back() {
@@ -179,6 +218,10 @@
 			</p>
 		{/if}
 
+		{#if finishing}
+			<p class="finishing" role="status">Locking in your answers…</p>
+		{/if}
+
 		<p class="sr-only" aria-live="polite">{answeredCount} of {total} questions answered</p>
 	</main>
 </div>
@@ -194,6 +237,7 @@
 		position: sticky;
 		top: 0;
 		z-index: 10;
+		padding-top: env(safe-area-inset-top);
 		background: color-mix(in srgb, var(--bg) 88%, transparent);
 		backdrop-filter: blur(8px);
 		border-bottom: 1px solid var(--border-dim);
@@ -344,5 +388,14 @@
 		border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
 		color: var(--fg);
 		font-size: 0.9375rem;
+	}
+
+	.finishing {
+		margin-top: 1rem;
+		text-align: center;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--muted);
+		animation: pulse-soft 1.4s ease-in-out infinite;
 	}
 </style>

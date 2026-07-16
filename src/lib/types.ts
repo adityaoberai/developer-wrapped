@@ -82,7 +82,6 @@ export interface PublicResult {
 	avatar_url: string;
 	archetype_id: ArchetypeId;
 	secondary_archetype_id: ArchetypeId;
-	scores_json: string;
 	is_public: boolean;
 	completed_at: string;
 }
@@ -93,13 +92,15 @@ export interface MeResponse {
 	currentResult: Pick<ResultDto, 'share_slug' | 'archetype_id' | 'is_public'> | null;
 }
 
+/** One published Wrapped edition on the live feed — sanitized public_shares data only. */
 export interface FeedItem {
 	share_slug: string;
 	display_name: string;
 	github_username: string;
 	avatar_url: string;
-	archetype_id: ArchetypeId;
-	completed_at: string;
+	archetype_id: ArchetypeId | null;
+	contributions: number;
+	published_at: string;
 }
 
 export function parseQuestion(dto: QuestionDto): QuizQuestion {

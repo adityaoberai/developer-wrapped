@@ -37,7 +37,7 @@ export function toResultDto(row: Row): ResultDto {
 	};
 }
 
-/** Public projection — never exposes user_id or private quiz data. */
+/** Public projection — never exposes user_id, score payloads, or private quiz data. */
 export function toPublicResult(row: Row): PublicResult {
 	return {
 		share_slug: row.share_slug as string,
@@ -46,7 +46,6 @@ export function toPublicResult(row: Row): PublicResult {
 		avatar_url: (row.avatar_url as string) ?? '',
 		archetype_id: row.archetype_id as ArchetypeId,
 		secondary_archetype_id: row.secondary_archetype_id as ArchetypeId,
-		scores_json: (row.scores_json as string) ?? '{}',
 		is_public: Boolean(row.is_public),
 		completed_at: row.completed_at as string
 	};

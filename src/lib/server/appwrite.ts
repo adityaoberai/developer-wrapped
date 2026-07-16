@@ -8,7 +8,9 @@ export const TABLES = {
 	profiles: 'profiles',
 	questions: 'questions',
 	answers: 'answers',
-	results: 'results'
+	results: 'results',
+	wrappedReports: 'wrapped_reports',
+	publicShares: 'public_shares'
 } as const;
 export const BUCKET_ID = 'share-cards';
 export const SESSION_COOKIE = 'dw-session';
@@ -24,16 +26,18 @@ export function createGuestClient() {
 }
 
 /**
- * API-key client — required for the OAuth token → session exchange, because
- * Appwrite only returns the session secret to API-key requests.
- * Needs an API key with the `sessions.write` scope.
+ * API-key client — required for the OAuth token → session exchange (Appwrite
+ * only returns the session secret to API-key requests) and for all writes to
+ * the `wrapped_reports`/`public_shares` tables, which deliberately grant
+ * clients no create/update permission so every write passes server validation.
+ * Needs an API key with the `sessions.write`, `rows.read` and `rows.write` scopes.
  */
 export function createAdminClient() {
 	if (!env.APPWRITE_API_KEY) {
 		throw new Error('APPWRITE_API_KEY is not set — required for the OAuth session exchange.');
 	}
 	const client = baseClient().setKey(env.APPWRITE_API_KEY);
-	return { client, account: new Account(client) };
+	return { client, account: new Account(client), tablesDB: new TablesDB(client) };
 }
 
 /** Resolve the authenticated request context or fail with 401. */

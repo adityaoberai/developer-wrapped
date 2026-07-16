@@ -1,22 +1,49 @@
 import { getArchetype } from '$lib/content/archetypes';
-import { createGuestClient, DB_ID, TABLES } from '$lib/server/appwrite';
+import { createGuestClient, DB_ID, getRowOrNull, TABLES } from '$lib/server/appwrite';
 import { renderOgImage, type OgCard } from '$lib/server/og/render';
+import { SLUG_PATTERN } from '$lib/server/validate';
+import type { SharedMetrics } from '$lib/wrapped/types';
 import { Query } from 'node-appwrite';
 import type { RequestHandler } from './$types';
 
 const DEFAULT_CARD: OgCard = {
 	title: 'What kind of developer are you, really?',
-	subtitle: 'Find out in eight uncomfortably accurate questions. One dramatic diagnosis.',
+	subtitle: 'Your last 12 months on GitHub, turned into an uncomfortably accurate story.',
 	handle: 'wrapped for developers',
 	gradient: ['#7C3AED', '#DB2777']
 };
 
-/** Dynamic 1200x630 Open Graph image; `?slug=` renders a personalized result card. */
+/**
+ * Dynamic 1200x630 Open Graph image; `?slug=` renders a quiz-result card and
+ * `?wrapped=` renders a published Wrapped card (sanitized public data only).
+ */
 export const GET: RequestHandler = async ({ url }) => {
 	let card = DEFAULT_CARD;
 
+	const wrappedSlug = url.searchParams.get('wrapped');
+	if (wrappedSlug && SLUG_PATTERN.test(wrappedSlug)) {
+		try {
+			const { tablesDB } = createGuestClient();
+			const row = await getRowOrNull(tablesDB, TABLES.publicShares, wrappedSlug);
+			if (row) {
+				const metrics = JSON.parse(row.metrics_json as string) as SharedMetrics;
+				const archetype = row.archetype_id ? getArchetype(row.archetype_id as string) : null;
+				const name =
+					(row.display_name as string) || (row.github_username as string) || 'A developer';
+				card = {
+					title: `${name}: ${metrics.contributions.toLocaleString('en-US')} contributions`,
+					subtitle: `${metrics.activeDays.toLocaleString('en-US')} active days · ${row.period_start} → ${row.period_end}`,
+					handle: row.github_username ? `@${row.github_username}` : 'developer wrapped',
+					gradient: archetype?.gradient ?? DEFAULT_CARD.gradient
+				};
+			}
+		} catch {
+			// fall back to the default card
+		}
+	}
+
 	const slug = url.searchParams.get('slug');
-	if (slug) {
+	if (slug && card === DEFAULT_CARD) {
 		try {
 			const { tablesDB } = createGuestClient();
 			const { rows } = await tablesDB.listRows({

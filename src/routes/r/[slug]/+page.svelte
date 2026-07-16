@@ -146,12 +146,40 @@
 
 	<section class="actions" aria-label="Result actions">
 		<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{actionStatus}</p>
-		<button class="btn" type="button" onclick={copyLink}>
-			{copied ? 'Link copied! 🎉' : 'Copy share link'}
-		</button>
-		{#if copyError}
-			<p class="card-error" role="alert">Couldn't copy the link — copy it from the address bar.</p>
+
+		{#if data.isOwner && !isPublic}
+			<!-- Explicit publish step: nothing becomes public without this confirmation. -->
+			<div class="publish-box">
+				<p class="publish-title">Your result is private</p>
+				<p class="publish-copy muted">
+					Only you can see this page. Publishing makes this link work for anyone and shows your
+					archetype, name, and avatar on the public feed — nothing else. You can make it private
+					again at any time.
+				</p>
+				<button
+					class="btn"
+					type="button"
+					onclick={toggleVisibility}
+					disabled={visibilityBusy}
+					aria-busy={visibilityBusy}
+				>
+					{visibilityBusy ? 'Publishing…' : 'Publish my result'}
+				</button>
+			</div>
+		{:else}
+			<button class="btn" type="button" onclick={copyLink}>
+				{copied ? 'Link copied! 🎉' : 'Copy share link'}
+			</button>
+			{#if copyError}
+				<p class="card-error" role="alert">
+					Couldn't copy the link — copy it from the address bar.
+				</p>
+			{/if}
+			{#if canNativeShare}
+				<button class="btn btn--ghost" type="button" onclick={nativeShare}>Share…</button>
+			{/if}
 		{/if}
+
 		<button
 			class="btn btn--subtle"
 			type="button"
@@ -164,24 +192,19 @@
 		{#if cardError}
 			<p class="card-error" role="alert">Couldn't render the card image — try again.</p>
 		{/if}
-		{#if canNativeShare}
-			<button class="btn btn--ghost" type="button" onclick={nativeShare}>Share…</button>
-		{/if}
 
 		{#if data.isOwner}
-			<button
-				class="btn btn--ghost"
-				type="button"
-				onclick={toggleVisibility}
-				disabled={visibilityBusy}
-				aria-busy={visibilityBusy}
-			>
-				{visibilityBusy
-					? 'Updating visibility…'
-					: isPublic
-						? 'Make result private'
-						: 'Make result public'}
-			</button>
+			{#if isPublic}
+				<button
+					class="btn btn--ghost"
+					type="button"
+					onclick={toggleVisibility}
+					disabled={visibilityBusy}
+					aria-busy={visibilityBusy}
+				>
+					{visibilityBusy ? 'Updating visibility…' : 'Make result private'}
+				</button>
+			{/if}
 			<a class="btn btn--ghost" href="/quiz">Retake the quiz</a>
 			{#if visibilityError}
 				<p class="card-error" role="alert">Couldn't update result visibility — try again.</p>
@@ -246,6 +269,25 @@
 	.card-error {
 		font-size: 0.875rem;
 		color: var(--warn);
+	}
+
+	.publish-box {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem 1.125rem;
+		border-radius: var(--radius-md);
+		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+		background: color-mix(in srgb, var(--accent) 12%, var(--bg-raised));
+	}
+
+	.publish-title {
+		font-weight: 800;
+	}
+
+	.publish-copy {
+		font-size: 0.9075rem;
+		line-height: 1.5;
 	}
 
 	.footnote {

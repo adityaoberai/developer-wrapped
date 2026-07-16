@@ -4,7 +4,7 @@ import { AppwriteException } from 'node-appwrite';
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-const PRIVATE_PATHS = new Set(['/welcome', '/quiz', '/reveal']);
+const PRIVATE_PATHS = new Set(['/welcome', '/quiz', '/reveal', '/wrapped']);
 
 function secure(response: Response, url: URL): Response {
 	if (!response.headers.has('content-security-policy')) {
