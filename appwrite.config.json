@@ -1,152 +1,510 @@
 {
-	"organizationId": "644f781f52e495a890db",
-	"projectId": "developer-wrapped",
-	"projectName": "Developer Wrapped",
-	"endpoint": "https://sgp.cloud.appwrite.io/v1",
-	"sites": [
-		{
-			"$id": "developer-wrapped",
-			"name": "Developer Wrapped",
-			"framework": "sveltekit",
-			"adapter": "ssr",
-			"buildRuntime": "node-22",
-			"installCommand": "npm ci",
-			"buildCommand": "npm run build",
-			"startCommand": "npm run start",
-			"outputDirectory": "./build",
-			"fallbackFile": "",
-			"timeout": 30,
-			"logging": true,
-			"buildSpecification": "s-1vcpu-512mb",
-			"runtimeSpecification": "s-1vcpu-512mb",
-			"path": "."
-		}
-	],
-	"tablesDB": [
-		{
-			"$id": "wrapped",
-			"name": "Developer Wrapped",
-			"enabled": true
-		}
-	],
-	"tables": [
-		{
-			"$id": "profiles",
-			"$permissions": ["create(\"users\")"],
-			"databaseId": "wrapped",
-			"name": "profiles",
-			"enabled": true,
-			"rowSecurity": true,
-			"columns": [
-				{ "key": "user_id", "type": "varchar", "size": 36, "required": true },
-				{ "key": "github_username", "type": "varchar", "size": 100, "required": false },
-				{ "key": "display_name", "type": "varchar", "size": 128, "required": false },
-				{ "key": "avatar_url", "type": "varchar", "size": 1024, "required": false },
-				{ "key": "quiz_completed", "type": "boolean", "required": false, "default": false }
-			],
-			"indexes": [
-				{ "key": "user_id_unique", "type": "unique", "columns": ["user_id"], "orders": ["ASC"] }
-			]
-		},
-		{
-			"$id": "questions",
-			"$permissions": ["read(\"users\")"],
-			"databaseId": "wrapped",
-			"name": "questions",
-			"enabled": true,
-			"rowSecurity": false,
-			"columns": [
-				{ "key": "prompt", "type": "varchar", "size": 512, "required": true },
-				{ "key": "options_json", "type": "text", "required": true },
-				{ "key": "weights_json", "type": "text", "required": true },
-				{ "key": "position", "type": "integer", "required": true, "min": 1, "max": 100 },
-				{ "key": "active", "type": "boolean", "required": false, "default": true }
-			],
-			"indexes": [
-				{ "key": "position_idx", "type": "key", "columns": ["position"], "orders": ["ASC"] }
-			]
-		},
-		{
-			"$id": "answers",
-			"$permissions": ["create(\"users\")"],
-			"databaseId": "wrapped",
-			"name": "answers",
-			"enabled": true,
-			"rowSecurity": true,
-			"columns": [
-				{ "key": "user_id", "type": "varchar", "size": 36, "required": true },
-				{ "key": "question_id", "type": "varchar", "size": 36, "required": true },
-				{ "key": "option_id", "type": "varchar", "size": 64, "required": true },
-				{ "key": "answered_at", "type": "datetime", "required": true }
-			],
-			"indexes": [{ "key": "user_idx", "type": "key", "columns": ["user_id"], "orders": ["ASC"] }]
-		},
-		{
-			"$id": "results",
-			"$permissions": ["create(\"users\")"],
-			"databaseId": "wrapped",
-			"name": "results",
-			"enabled": true,
-			"rowSecurity": true,
-			"columns": [
-				{ "key": "user_id", "type": "varchar", "size": 36, "required": true },
-				{ "key": "github_username", "type": "varchar", "size": 100, "required": false },
-				{ "key": "display_name", "type": "varchar", "size": 128, "required": false },
-				{ "key": "avatar_url", "type": "varchar", "size": 1024, "required": false },
-				{ "key": "archetype_id", "type": "varchar", "size": 64, "required": true },
-				{ "key": "secondary_archetype_id", "type": "varchar", "size": 64, "required": false },
-				{ "key": "scores_json", "type": "text", "required": false },
-				{ "key": "share_slug", "type": "varchar", "size": 64, "required": true },
-				{ "key": "is_public", "type": "boolean", "required": false, "default": true },
-				{ "key": "card_file_id", "type": "varchar", "size": 64, "required": false },
-				{ "key": "completed_at", "type": "datetime", "required": true }
-			],
-			"indexes": [
-				{
-					"key": "share_slug_unique",
-					"type": "unique",
-					"columns": ["share_slug"],
-					"orders": ["ASC"]
-				},
-				{ "key": "user_idx", "type": "key", "columns": ["user_id"], "orders": ["ASC"] },
-				{
-					"key": "feed_idx",
-					"type": "key",
-					"columns": ["is_public", "completed_at"],
-					"orders": ["ASC", "DESC"]
-				}
-			]
-		},
-		{
-			"$id": "archetypes",
-			"$permissions": ["read(\"any\")"],
-			"databaseId": "wrapped",
-			"name": "archetypes",
-			"enabled": true,
-			"rowSecurity": false,
-			"columns": [
-				{ "key": "name", "type": "varchar", "size": 100, "required": true },
-				{ "key": "tagline", "type": "varchar", "size": 256, "required": true },
-				{ "key": "traits_json", "type": "text", "required": true },
-				{ "key": "priority", "type": "integer", "required": true, "min": 1, "max": 100 }
-			],
-			"indexes": [
-				{ "key": "priority_idx", "type": "key", "columns": ["priority"], "orders": ["ASC"] }
-			]
-		}
-	],
-	"buckets": [
-		{
-			"$id": "share-cards",
-			"$permissions": ["create(\"users\")"],
-			"name": "Share Cards",
-			"enabled": true,
-			"fileSecurity": true,
-			"maximumFileSize": 5242880,
-			"allowedFileExtensions": ["png"],
-			"compression": "none",
-			"encryption": false,
-			"antivirus": false
-		}
-	]
+    "organizationId": "644f781f52e495a890db",
+    "projectId": "developer-wrapped",
+    "projectName": "Developer Wrapped",
+    "endpoint": "https://sgp.cloud.appwrite.io/v1",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "sites": true,
+            "functions": true,
+            "graphql": true,
+            "messaging": true
+        },
+        "protocols": {
+            "rest": true,
+            "graphql": true,
+            "websocket": true
+        },
+        "auth": {
+            "methods": {
+                "jwt": true,
+                "phone": true,
+                "invites": true,
+                "anonymous": true,
+                "email-otp": true,
+                "magic-url": true,
+                "email-password": true
+            },
+            "security": {
+                "duration": 31536000,
+                "limit": null,
+                "sessionsLimit": null,
+                "passwordHistory": null,
+                "passwordDictionary": false,
+                "personalDataCheck": false,
+                "sessionAlerts": false,
+                "mockNumbers": []
+            }
+        }
+    },
+    "sites": [
+        {
+            "$id": "developer-wrapped",
+            "name": "Developer Wrapped",
+            "framework": "sveltekit",
+            "adapter": "ssr",
+            "buildRuntime": "node-22",
+            "installCommand": "npm ci",
+            "buildCommand": "npm run build",
+            "startCommand": "npm run start",
+            "outputDirectory": "./build",
+            "fallbackFile": "",
+            "timeout": 30,
+            "logging": true,
+            "buildSpecification": "s-1vcpu-512mb",
+            "runtimeSpecification": "s-1vcpu-512mb",
+            "path": "."
+        },
+        {
+            "$id": "6a59278e003070a7545e",
+            "name": "developer-wrapped",
+            "path": "sites/developer-wrapped",
+            "framework": "sveltekit",
+            "logging": true,
+            "timeout": 30,
+            "buildRuntime": "node-22",
+            "adapter": "ssr",
+            "installCommand": "npm install",
+            "buildCommand": "npm run build",
+            "outputDirectory": "./build",
+            "fallbackFile": "",
+            "startCommand": "bash helpers/sveltekit/server.sh",
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        }
+    ],
+    "tablesDB": [
+        {
+            "$id": "wrapped",
+            "name": "Developer Wrapped",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "questions",
+            "$permissions": [
+                "read(\"users\")"
+            ],
+            "databaseId": "wrapped",
+            "name": "questions",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "prompt",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 512,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "options_json",
+                    "type": "text",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "weights_json",
+                    "type": "text",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "position",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "min": 1,
+                    "max": 100
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "position_idx",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "position"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "archetypes",
+            "$permissions": [
+                "read(\"any\")"
+            ],
+            "databaseId": "wrapped",
+            "name": "archetypes",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "name",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 100,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "tagline",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 256,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "traits_json",
+                    "type": "text",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "priority",
+                    "type": "integer",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "min": 1,
+                    "max": 100
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "priority_idx",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "priority"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "results",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "wrapped",
+            "name": "results",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "user_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 36,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "github_username",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 100,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "display_name",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "avatar_url",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 1024,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "archetype_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "secondary_archetype_id",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "scores_json",
+                    "type": "text",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "share_slug",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "is_public",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "card_file_id",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "completed_at",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "share_slug_unique",
+                    "type": "unique",
+                    "status": "available",
+                    "columns": [
+                        "share_slug"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "user_idx",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "user_id"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "feed_idx",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "is_public",
+                        "completed_at"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "answers",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "wrapped",
+            "name": "answers",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "user_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 36,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "question_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 36,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "option_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "answered_at",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "user_idx",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "user_id"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "profiles",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "wrapped",
+            "name": "profiles",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "user_id",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 36,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "github_username",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 100,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "display_name",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "avatar_url",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 1024,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "quiz_completed",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "user_id_unique",
+                    "type": "unique",
+                    "status": "available",
+                    "columns": [
+                        "user_id"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "share-cards",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "fileSecurity": true,
+            "name": "Share Cards",
+            "enabled": true,
+            "maximumFileSize": 5242880,
+            "allowedFileExtensions": [
+                "png"
+            ],
+            "compression": "none",
+            "encryption": false,
+            "antivirus": false
+        }
+    ]
 }
