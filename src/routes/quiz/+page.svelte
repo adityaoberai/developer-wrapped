@@ -194,27 +194,42 @@
 					/>
 				</svg>
 			</button>
-			<div
-				class="progress"
-				role="progressbar"
-				aria-label="Quiz progress"
-				aria-valuemin={1}
-				aria-valuemax={total}
-				aria-valuenow={index + 1}
-				aria-valuetext="Question {index + 1} of {total}"
-			>
-				<div class="progress-track">
-					<div class="progress-fill" style:width="{((index + 1) / total) * 100}%"></div>
+			<div class="meter">
+				<div class="meter-head" aria-hidden="true">
+					<span class="meter-label">Now examining</span>
+					<span class="counter"
+						>{String(index + 1).padStart(2, '0')}/{String(total).padStart(2, '0')}</span
+					>
+				</div>
+				<div
+					class="progress"
+					role="progressbar"
+					aria-label="Quiz progress"
+					aria-valuemin={1}
+					aria-valuemax={total}
+					aria-valuenow={index + 1}
+					aria-valuetext="Question {index + 1} of {total}"
+				>
+					<div class="progress-track">
+						<div class="progress-fill" style:width="{((index + 1) / total) * 100}%"></div>
+					</div>
 				</div>
 			</div>
-			<span class="counter" aria-hidden="true">{index + 1}/{total}</span>
 		</div>
 	</header>
 
 	<main id="main-content" class="stage shell" tabindex="-1">
 		{#key index}
 			<section class="question fade-up">
-				<h1 id="question-heading" tabindex="-1">{question.prompt}</h1>
+				<div class="q-head">
+					<p class="eyebrow">Cross-examination</p>
+					<span class="q-exhibit" aria-hidden="true"
+						>Exhibit {String(index + 1).padStart(2, '0')}</span
+					>
+				</div>
+				<h1 id="question-heading" tabindex="-1">
+					{question.prompt}<span class="caret" aria-hidden="true"></span>
+				</h1>
 				<fieldset class="options">
 					<legend class="sr-only">Choose one answer for: {question.prompt}</legend>
 					{#each question.options as option (option.id)}
@@ -230,25 +245,27 @@
 							/>
 							<span class="option-emoji" aria-hidden="true">{option.emoji}</span>
 							<span class="option-label">{option.label}</span>
-							{#if selected}
-								<svg
-									class="check pop-in"
-									width="22"
-									height="22"
-									viewBox="0 0 22 22"
-									fill="none"
-									aria-hidden="true"
-								>
-									<circle cx="11" cy="11" r="11" fill="currentColor" opacity="0.9" />
-									<path
-										d="m6.5 11.5 3 3 6-6.5"
-										stroke="#0f172a"
-										stroke-width="2.4"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-								</svg>
-							{/if}
+							<span class="option-mark" aria-hidden="true">
+								{#if selected}
+									<svg
+										class="check pop-in"
+										width="22"
+										height="22"
+										viewBox="0 0 22 22"
+										fill="none"
+										aria-hidden="true"
+									>
+										<circle cx="11" cy="11" r="11" fill="currentColor" opacity="0.9" />
+										<path
+											d="m6.5 11.5 3 3 6-6.5"
+											stroke="#0f172a"
+											stroke-width="2.4"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+								{/if}
+							</span>
 						</label>
 					{/each}
 				</fieldset>
@@ -269,7 +286,9 @@
 		{/if}
 
 		{#if finishing}
-			<p class="finishing" role="status">Locking in your verdict…</p>
+			<p class="finishing" role="status">
+				Locking in your verdict<span class="caret" aria-hidden="true"></span>
+			</p>
 		{/if}
 
 		<p class="sr-only" aria-live="polite">{answeredCount} of {total} questions answered</p>
@@ -283,21 +302,23 @@
 		flex-direction: column;
 	}
 
+	/* Sticky printer chrome: a labelled ledger meter on receipt stock,
+	   crowned by a hard ink hairline like the top of a torn-off slip. */
 	.topbar {
 		position: sticky;
 		top: 0;
 		z-index: 10;
 		padding-top: env(safe-area-inset-top);
-		background: color-mix(in srgb, var(--bg) 88%, transparent);
-		backdrop-filter: blur(8px);
-		border-bottom: 1px solid var(--border-dim);
+		background: var(--receipt);
+		border-bottom: 1px solid var(--ink);
+		box-shadow: 0 2px 0 var(--rule-2);
 	}
 
 	.topbar-inner {
 		display: flex;
 		align-items: center;
 		gap: 0.875rem;
-		padding-block: 0.75rem;
+		padding-block: 0.625rem;
 	}
 
 	.back {
@@ -306,41 +327,91 @@
 		width: 2.75rem;
 		height: 2.75rem;
 		flex-shrink: 0;
-		border: 1px solid var(--border-dim);
-		border-radius: 50%;
-		background: var(--bg-raised);
-		color: var(--fg);
+		border: 1px solid var(--ink);
+		border-radius: var(--radius-sm);
+		background: var(--receipt);
+		color: var(--ink);
 		cursor: pointer;
+		box-shadow: var(--shadow-hard) var(--rule-2);
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease;
+	}
+
+	.back:hover:not(:disabled) {
+		transform: translate(-1px, -1px);
+		box-shadow: 3px 3px 0 var(--rule-2);
+	}
+
+	.back:active:not(:disabled) {
+		transform: translate(1px, 1px);
+		box-shadow: 1px 1px 0 var(--rule-2);
 	}
 
 	.back:disabled {
 		opacity: 0.35;
 		cursor: default;
+		box-shadow: none;
+	}
+
+	.meter {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.meter-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.meter-label {
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--muted);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.counter {
+		font-family: var(--mono);
+		font-variant-numeric: tabular-nums;
+		font-weight: 700;
+		font-size: 0.8125rem;
+		letter-spacing: 0.1em;
+		color: var(--ink);
+		white-space: nowrap;
 	}
 
 	.progress {
-		flex: 1;
+		width: 100%;
 	}
 
+	/* Printed progress: hatched paper track, solid ink fill with a
+	   vermilion "print head" leading edge. */
 	.progress-track {
-		height: 0.5rem;
-		border-radius: 999px;
-		background: var(--bg-raised);
+		height: 0.6875rem;
+		border: 1px solid var(--ink);
+		border-radius: var(--radius-sm);
+		background:
+			repeating-linear-gradient(45deg, transparent 0 5px, rgba(27, 23, 18, 0.04) 5px 6px),
+			var(--paper-2);
 		overflow: hidden;
 	}
 
 	.progress-fill {
 		height: 100%;
-		border-radius: 999px;
-		background: linear-gradient(90deg, var(--accent), #db2777);
+		background: var(--ink);
+		box-shadow: inset -2px 0 0 var(--accent);
 		transition: width 300ms ease;
-	}
-
-	.counter {
-		font-variant-numeric: tabular-nums;
-		font-weight: 700;
-		font-size: 0.9375rem;
-		color: var(--muted);
 	}
 
 	.stage {
@@ -351,42 +422,84 @@
 		padding-block: 2rem;
 	}
 
-	.question h1 {
-		font-size: clamp(1.5rem, 6.5vw, 2.125rem);
-		font-weight: 800;
-		margin-bottom: 1.75rem;
+	/* Docket kicker row above the prompt (eyebrow + mono exhibit folio). */
+	.q-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.875rem;
 	}
 
+	.q-exhibit {
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.question h1 {
+		font-size: clamp(1.5rem, 6.5vw, 2rem);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		margin-bottom: 1.5rem;
+	}
+
+	/* Option rows read like tappable ledger/receipt lines: a lettered
+	   key chip, the choice, and a punch-card selection mark. */
 	.options {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 0.625rem;
 		min-width: 0;
 		margin: 0;
 		padding: 0;
 		border: 0;
+		counter-reset: opt;
 	}
 
 	.option {
 		display: flex;
 		align-items: center;
-		gap: 0.875rem;
+		gap: 0.75rem;
 		width: 100%;
-		min-height: 4rem;
-		padding: 1rem 1.125rem;
-		border: 1.5px solid var(--border-dim);
+		min-height: 3.75rem;
+		padding: 0.8125rem 0.9375rem;
+		border: 1px solid var(--rule);
 		border-radius: var(--radius-md);
-		background: var(--bg-raised);
-		color: var(--fg);
+		background: var(--receipt);
+		color: var(--ink);
 		font-size: 1rem;
-		font-weight: 600;
 		text-align: left;
 		cursor: pointer;
+		box-shadow: var(--shadow-hard) var(--rule-2);
+		counter-increment: opt;
 		transition:
 			border-color 120ms ease,
 			background 120ms ease,
+			box-shadow 120ms ease,
 			transform 120ms ease;
 		touch-action: manipulation;
+	}
+
+	.option::before {
+		content: counter(opt, upper-alpha);
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		width: 1.625rem;
+		height: 1.625rem;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-sm);
+		background: var(--band);
+		font-family: var(--mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: var(--muted);
 	}
 
 	.option-input {
@@ -399,66 +512,119 @@
 	}
 
 	.option:has(.option-input:focus-visible) {
-		outline: 3px solid var(--accent-bright);
+		outline: 2px solid var(--pen);
 		outline-offset: 2px;
 	}
 
 	.option:hover {
-		border-color: rgba(167, 139, 250, 0.6);
+		border-color: var(--ink);
+		transform: translate(-1px, -1px);
+		box-shadow: 3px 3px 0 var(--rule-2);
 	}
 
 	.option:active {
-		transform: scale(0.985);
+		transform: translate(1px, 1px);
+		box-shadow: 1px 1px 0 var(--rule-2);
 	}
 
 	.option.selected {
-		border-color: var(--accent-bright);
-		background: color-mix(in srgb, var(--accent) 28%, var(--bg-raised));
+		border-color: var(--ink);
+		background: var(--stamp-band);
+		box-shadow: var(--shadow-hard) var(--accent);
+	}
+
+	.option.selected::before {
+		border-color: var(--ink);
+		background: var(--ink);
+		color: var(--receipt);
 	}
 
 	.option-emoji {
 		font-size: 1.375rem;
 		flex-shrink: 0;
+		line-height: 1;
 	}
 
 	.option-label {
 		flex: 1;
+		font-weight: 600;
+		overflow-wrap: anywhere;
+	}
+
+	.option-mark {
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border: 1.5px solid var(--rule);
+		border-radius: 50%;
+		background: var(--receipt);
+	}
+
+	.option.selected .option-mark {
+		border-color: transparent;
+		background: transparent;
 	}
 
 	.check {
 		flex-shrink: 0;
-		color: var(--accent-bright);
+		color: var(--accent);
 	}
 
+	/* Errors print as a pen-and-amber marginal note on the slip. */
 	.save-error {
-		margin-top: 1rem;
-		padding: 0.75rem 1rem;
-		border-radius: var(--radius-md);
-		background: color-mix(in srgb, var(--warn) 18%, var(--bg-raised));
-		border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
-		color: var(--fg);
+		margin-top: 1.25rem;
+		padding: 0.875rem 1rem;
+		border: 1px solid var(--warn);
+		border-left: 3px solid var(--warn);
+		border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--warn) 10%, var(--receipt));
+		color: var(--ink);
 		font-size: 0.9375rem;
 	}
 
 	.retry {
-		margin-top: 0.5rem;
+		margin-top: 0.625rem;
 		min-height: 2.75rem;
 		padding: 0.5rem 1.25rem;
+		border: 1px solid var(--ink);
 		border-radius: var(--radius-md);
-		border: 1.5px solid var(--border-dim);
-		background: var(--bg-raised);
-		color: var(--fg);
-		font: inherit;
+		background: var(--receipt);
+		color: var(--ink);
+		font-family: var(--mono);
 		font-weight: 700;
+		font-size: 0.8125rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 		cursor: pointer;
+		box-shadow: var(--shadow-hard) var(--rule-2);
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease;
+	}
+
+	.retry:hover {
+		transform: translate(-1px, -1px);
+		box-shadow: 3px 3px 0 var(--rule-2);
+	}
+
+	.retry:active {
+		transform: translate(1px, 1px);
+		box-shadow: 1px 1px 0 var(--rule-2);
 	}
 
 	.finishing {
-		margin-top: 1rem;
-		text-align: center;
-		font-size: 0.9375rem;
-		font-weight: 600;
+		margin-top: 1.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.2ch;
+		font-family: var(--mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
 		color: var(--muted);
-		animation: pulse-soft 1.4s ease-in-out infinite;
 	}
 </style>

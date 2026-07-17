@@ -1,20 +1,65 @@
 @import '@fontsource-variable/inter';
 
+/* ============================================================
+   DEVELOPER WRAPPED — "TERMINAL RECEIPTS" design system.
+   A warm thermal-paper / developer-terminal world: the product's
+   "receipts / courtroom evidence" voice IS the visual system.
+   Machine layer (labels, numbers, source stamps, buttons, chrome)
+   is monospace; long-form body copy is Inter for readability.
+   Committed single (light) theme — a printout has one look.
+   ============================================================ */
+
 :root {
-	--bg: #0f172a;
-	--bg-raised: #1e293b;
-	--fg: #f8fafc;
-	--muted: #94a3b8;
-	--accent: #7c3aed;
-	--accent-bright: #a78bfa;
-	--warn: #f97316;
-	--success: #22c55e;
-	--border: #e2e8f0;
-	--border-dim: rgba(226, 232, 240, 0.14);
-	--radius-lg: 20px;
-	--radius-md: 14px;
+	/* --- palette: thermal paper, black ink, one stamp --- */
+	--paper: #e9e3d4; /* page background */
+	--paper-2: #e1d9c6; /* deeper paper: recessed panels, gutters, bezels */
+	--receipt: #fbf9f3; /* raised surface: cards, screens */
+	--ink: #1b1712; /* primary text + hard borders */
+	--ink-2: #2e2820; /* softened ink */
+	--muted: #5b5344; /* secondary text (AA on paper) */
+	--stamp: #b23016; /* vermilion accent: verdict / evidence */
+	--stamp-ink: #8f2410; /* darker vermilion for small text (AA on paper) */
+	--stamp-band: rgba(178, 48, 22, 0.09);
+	--pen: #274b7a; /* ledger blue: the sober register + "you said" */
+	--success: #2f7d5b; /* live / ok — paper-safe green */
+	--warn: #a8480c; /* errors on paper — amber-brown */
+
+	/* per-archetype accent — pages override --accent / --accent-ink inline.
+	   Everything on-brand references these so a single swap re-themes a screen. */
+	--accent: var(--stamp);
+	--accent-ink: var(--stamp-ink);
+
+	/* --- rules & bands, derived from ink --- */
+	--rule: rgba(27, 23, 18, 0.3); /* dashed / solid rules */
+	--rule-2: rgba(27, 23, 18, 0.14); /* faint hairlines */
+	--band: rgba(27, 23, 18, 0.055); /* source-line / well tint */
+
+	/* --- radii: near-squared, print feel --- */
+	--radius-lg: 6px;
+	--radius-md: 4px;
+	--radius-sm: 3px;
+
+	/* --- shadows: hard offset, no blur --- */
+	--shadow-hard: 4px 4px 0;
+	--shadow-card: 5px 6px 0 rgba(27, 23, 18, 0.1);
+
+	/* --- layout --- */
 	--shell-width: 30rem;
-	--font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	/* --- type --- */
+	--mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+	--sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-sans: var(--sans);
+
+	/* --- legacy token aliases (safety net during/after migration).
+	   Prefer the semantic tokens above; these keep any missed reference
+	   on-palette rather than reverting to the old dark theme. --- */
+	--bg: var(--paper);
+	--bg-raised: var(--receipt);
+	--fg: var(--ink);
+	--accent-bright: var(--stamp);
+	--border: var(--ink);
+	--border-dim: var(--rule-2);
 }
 
 *,
@@ -28,18 +73,24 @@
 }
 
 html {
-	color-scheme: dark;
+	color-scheme: light;
 	-webkit-text-size-adjust: 100%;
 }
 
 body {
 	min-height: 100dvh;
-	background: var(--bg);
-	color: var(--fg);
-	font-family: var(--font-sans);
+	background: var(--paper);
+	color: var(--ink);
+	font-family: var(--sans);
 	font-size: 1rem;
-	line-height: 1.5;
+	line-height: 1.55;
+	/* whisper-quiet fibrous paper grain */
+	background-image:
+		repeating-linear-gradient(90deg, rgba(27, 23, 18, 0.018) 0 1px, transparent 1px 3px),
+		radial-gradient(120% 80% at 50% 0%, rgba(27, 23, 18, 0.05), transparent 60%);
+	background-attachment: fixed;
 	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 }
 
 img,
@@ -54,26 +105,30 @@ input {
 }
 
 a {
-	color: var(--accent-bright);
+	color: var(--stamp-ink);
+	text-underline-offset: 0.18em;
 }
 
+/* Headlines are the "machine" voice: monospace, set tight and heavy. */
 h1,
 h2,
 h3 {
+	font-family: var(--mono);
+	font-weight: 700;
 	line-height: 1.1;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.01em;
 	text-wrap: balance;
 }
 
 :focus-visible {
-	outline: 3px solid var(--accent-bright);
+	outline: 2px solid var(--pen);
 	outline-offset: 2px;
-	border-radius: 6px;
+	border-radius: 2px;
 }
 
 ::selection {
-	background: var(--accent);
-	color: var(--fg);
+	background: var(--stamp);
+	color: var(--receipt);
 }
 
 /* Keep the keyboard shortcut out of sight until it receives focus. */
@@ -84,10 +139,13 @@ h3 {
 	z-index: 1000;
 	transform: translateY(calc(-100% - 1rem));
 	padding: 0.75rem 1rem;
-	border-radius: 0.5rem;
-	background: var(--fg);
-	color: var(--bg);
-	font-weight: 800;
+	border-radius: var(--radius-sm);
+	background: var(--ink);
+	color: var(--receipt);
+	font-family: var(--mono);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
 	text-decoration: none;
 }
 
@@ -108,7 +166,10 @@ h3 {
 	max-width: 46rem;
 }
 
-/* Buttons */
+/* ============================================================
+   BUTTONS — monospace, uppercase, hard offset shadow.
+   The primary sits in ink with a vermilion "stamp" shadow.
+   ============================================================ */
 .btn {
 	display: flex;
 	align-items: center;
@@ -117,74 +178,102 @@ h3 {
 	width: 100%;
 	min-height: 3.5rem;
 	padding: 0.875rem 1.25rem;
-	border: 0;
+	border: 1px solid var(--ink);
 	border-radius: var(--radius-md);
+	font-family: var(--mono);
 	font-weight: 700;
-	font-size: 1.0625rem;
-	color: var(--fg);
-	background: var(--accent);
+	font-size: 0.9375rem;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--receipt);
+	background: var(--ink);
 	cursor: pointer;
 	text-decoration: none;
 	text-align: center;
 	overflow-wrap: anywhere;
+	box-shadow: var(--shadow-hard) var(--stamp);
 	transition:
 		transform 120ms ease,
-		background 120ms ease,
-		opacity 120ms ease;
+		box-shadow 120ms ease;
 	touch-action: manipulation;
 }
 
 .btn:hover {
-	background: #6d28d9;
+	transform: translate(-1px, -1px);
+	box-shadow: 5px 5px 0 var(--stamp);
 }
 
 .btn:active {
-	transform: scale(0.98);
+	transform: translate(2px, 2px);
+	box-shadow: 1px 1px 0 var(--stamp);
 }
 
 .btn:disabled {
-	opacity: 0.55;
+	opacity: 0.5;
 	cursor: not-allowed;
+	transform: none;
+	box-shadow: var(--shadow-hard) var(--rule);
 }
 
 .btn--ghost {
 	background: transparent;
-	border: 1.5px solid var(--border-dim);
-	color: var(--fg);
+	border: 1.5px solid var(--ink);
+	color: var(--ink);
+	box-shadow: var(--shadow-hard) var(--rule);
 }
 
 .btn--ghost:hover {
-	background: rgba(226, 232, 240, 0.08);
-	border-color: rgba(226, 232, 240, 0.3);
+	background: var(--band);
+	box-shadow: 5px 5px 0 var(--rule);
 }
 
 .btn--subtle {
-	background: var(--bg-raised);
+	background: var(--receipt);
+	border: 1px solid var(--ink);
+	color: var(--ink);
+	box-shadow: var(--shadow-hard) var(--rule-2);
 }
 
 .btn--subtle:hover {
-	background: #283548;
+	background: var(--paper-2);
+	box-shadow: 5px 5px 0 var(--rule-2);
 }
 
-/* Cards */
+/* ============================================================
+   CARDS — receipt stock, hairline border, hard card shadow.
+   ============================================================ */
 .card {
-	background: var(--bg-raised);
-	border: 1px solid var(--border-dim);
+	background: var(--receipt);
+	border: 1px solid var(--rule);
 	border-radius: var(--radius-lg);
 	padding: 1.25rem;
+	box-shadow: var(--shadow-card);
 }
 
-/* Utility text */
+/* ============================================================
+   TEXT UTILITIES
+   ============================================================ */
 .muted {
 	color: var(--muted);
 }
 
+/* Eyebrow / kicker: monospace, tracked, with a vermilion caret prefix. */
 .eyebrow {
-	font-size: 0.8125rem;
+	font-family: var(--mono);
+	font-size: 0.6875rem;
 	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.14em;
-	color: var(--accent-bright);
+	letter-spacing: 0.2em;
+	color: var(--muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6ch;
+}
+
+.eyebrow::before {
+	content: '›';
+	color: var(--accent);
+	font-weight: 700;
 }
 
 /* Screen-reader only */
@@ -200,7 +289,136 @@ h3 {
 	border: 0;
 }
 
-/* Shared animations */
+/* ============================================================
+   SIGNATURE DEVICES — reusable "receipt" primitives.
+   ============================================================ */
+
+/* THE hero device: the machine-readable source: stamp.
+   Markup: <div class="source-stamp"><span class="tag">SOURCE</span>
+            <span class="val">key=<b>value</b></span></div> */
+.source-stamp {
+	display: flex;
+	align-items: stretch;
+	font-family: var(--mono);
+	font-size: 0.6875rem;
+	line-height: 1.35;
+	border: 1px solid var(--rule);
+	background:
+		repeating-linear-gradient(45deg, transparent 0 6px, rgba(27, 23, 18, 0.02) 6px 7px), var(--band);
+}
+
+.source-stamp .tag {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	background: var(--ink);
+	color: var(--receipt);
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	padding: 0 8px;
+	font-size: 0.59375rem;
+}
+
+.source-stamp .val {
+	flex: 1 1 auto;
+	padding: 5px 9px;
+	color: var(--ink);
+	align-self: center;
+	word-break: break-word;
+}
+
+.source-stamp .val b {
+	color: var(--accent-ink);
+	font-weight: 700;
+}
+
+/* Perforated "tear here" rule and plain box-drawing hairline. */
+.perf {
+	height: 0;
+	border: 0;
+	border-top: 2px dashed var(--rule);
+}
+
+.rule-line {
+	height: 0;
+	border: 0;
+	border-top: 1px solid var(--rule-2);
+}
+
+/* Ledger row: label ······· value (dot leaders). */
+.ledger {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75ch;
+	width: 100%;
+	font-family: var(--mono);
+}
+
+.ledger .k {
+	white-space: nowrap;
+	color: var(--muted);
+}
+
+.ledger .lead {
+	flex: 1 1 auto;
+	border-bottom: 1px dotted var(--rule);
+	transform: translateY(-0.28em);
+	min-width: 1ch;
+}
+
+.ledger .v {
+	white-space: nowrap;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Rotated rubber stamp (e.g. "Certified · Exhibit A"). */
+.stamp-mark {
+	display: inline-block;
+	border: 2px solid var(--accent);
+	color: var(--accent-ink);
+	font-family: var(--mono);
+	font-size: 0.5625rem;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	padding: 3px 6px;
+	transform: rotate(4deg);
+	box-shadow: inset 0 0 0 1px var(--stamp-band);
+	white-space: nowrap;
+}
+
+/* Blinking terminal caret. */
+.caret {
+	display: inline-block;
+	width: 0.62ch;
+	height: 1.02em;
+	background: var(--accent);
+	vertical-align: -0.14em;
+	margin-left: 0.12ch;
+}
+
+/* CSS barcode strip. */
+.barcode {
+	height: 34px;
+	width: 100%;
+	background-image: repeating-linear-gradient(
+		90deg,
+		var(--ink) 0 2px,
+		transparent 2px 4px,
+		var(--ink) 4px 5px,
+		transparent 5px 9px,
+		var(--ink) 9px 12px,
+		transparent 12px 13px,
+		var(--ink) 13px 14px,
+		transparent 14px 18px
+	);
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes fade-up {
 	from {
 		opacity: 0;
@@ -226,6 +444,21 @@ h3 {
 	}
 }
 
+@keyframes stamp-in {
+	0% {
+		opacity: 0;
+		transform: rotate(4deg) scale(1.5);
+	}
+	70% {
+		opacity: 1;
+		transform: rotate(4deg) scale(0.94);
+	}
+	100% {
+		opacity: 1;
+		transform: rotate(4deg) scale(1);
+	}
+}
+
 @keyframes pulse-soft {
 	0%,
 	100% {
@@ -236,12 +469,28 @@ h3 {
 	}
 }
 
+@keyframes blink {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+
 .fade-up {
 	animation: fade-up 400ms ease both;
 }
 
 .pop-in {
 	animation: pop-in 350ms ease both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.caret {
+		animation: blink 1.05s step-end infinite;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -255,10 +504,13 @@ h3 {
 }
 
 @media (forced-colors: active) {
-	/* Background-clipped text otherwise becomes transparent in high-contrast mode. */
-	.hero em,
-	.code {
-		background: none !important;
-		color: CanvasText !important;
+	/* Keep hard borders and stamps legible in high-contrast mode. */
+	.source-stamp,
+	.stamp-mark,
+	.card {
+		border: 1px solid CanvasText !important;
+	}
+	.barcode {
+		forced-color-adjust: none;
 	}
 }

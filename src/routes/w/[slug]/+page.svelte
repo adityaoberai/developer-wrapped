@@ -62,14 +62,23 @@
 	id="main-content"
 	class="screen shell"
 	tabindex="-1"
-	style:--tint-a={archetype?.gradient[0] ?? '#7C3AED'}
-	style:--tint-b={archetype?.gradient[1] ?? '#DB2777'}
+	style:--accent={archetype?.gradient[0] ?? '#b23016'}
+	style:--accent-ink="color-mix(in srgb, {archetype?.gradient[0] ?? '#b23016'} 65%, var(--ink))"
 >
-	<nav class="mini-nav">
-		<a href="/" class="home-link">Developer Wrapped</a>
+	<nav class="statusbar">
+		<a href="/" class="home-link">Developer Wrapped<span class="caret" aria-hidden="true"></span></a
+		>
+		<span class="status-meta" aria-hidden="true">REC ● SHARE-READY</span>
 	</nav>
 
-	<article class="wrap-card" aria-labelledby="wrap-heading">
+	<article class="wrap-card fade-up" aria-labelledby="wrap-heading">
+		<div class="ticket-head">
+			<p class="eyebrow">Developer Wrapped</p>
+			<span class="stamp-mark" aria-hidden="true">Certified true copy</span>
+		</div>
+
+		<hr class="perf" />
+
 		<header class="who">
 			{#if share.avatar_url}
 				<img src={share.avatar_url} alt="" width="48" height="48" referrerpolicy="no-referrer" />
@@ -83,9 +92,21 @@
 			<span class="period">{periodLabel(share.period_start, share.period_end)}</span>
 		</header>
 
+		<hr class="rule-line" />
+
 		<div class="headline">
+			<span class="cap" aria-hidden="true">365-day total</span>
 			<p class="big-number">{fmt(share.metrics.contributions)}</p>
 			<h1 id="wrap-heading">contributions this year</h1>
+		</div>
+
+		<div class="source-stamp">
+			<span class="tag">SOURCE</span>
+			<span class="val"
+				>contributions=<b>{fmt(share.metrics.contributions)}</b> · active_days=<b
+					>{fmt(share.metrics.activeDays)}</b
+				></span
+			>
 		</div>
 
 		<dl class="stats">
@@ -125,16 +146,35 @@
 
 		{#if archetype}
 			<footer class="verdict">
-				<span aria-hidden="true">{archetype.emoji}</span>
-				GitHub says: <strong>{archetype.name}</strong>
-				{#if quizArchetype && quizArchetype.id !== archetype.id}
-					· they claimed {quizArchetype.name} {quizArchetype.emoji}
-				{:else if quizArchetype}
-					· the quiz agrees
-				{/if}
+				<span class="verdict-emoji" aria-hidden="true">{archetype.emoji}</span>
+				<span class="verdict-text">
+					GitHub says: <strong>{archetype.name}</strong>
+					{#if quizArchetype && quizArchetype.id !== archetype.id}
+						<span class="claimed">· they claimed {quizArchetype.name} {quizArchetype.emoji}</span>
+					{:else if quizArchetype}
+						<span class="agrees">· the quiz agrees</span>
+					{/if}
+				</span>
 			</footer>
+
+			<div class="source-stamp">
+				<span class="tag">SOURCE</span>
+				<span class="val">archetype=<b>{archetype.id}</b></span>
+			</div>
 		{/if}
+
+		<hr class="rule-line" />
+
+		<div class="barcode-row">
+			<div class="cap">
+				<span>No returns · no refunds</span>
+				<span class="id">{share.share_slug}</span>
+			</div>
+			<div class="barcode" aria-hidden="true"></div>
+		</div>
 	</article>
+
+	<div class="tear" aria-hidden="true"></div>
 
 	<section class="actions" aria-label="Share actions">
 		<button class="btn" type="button" onclick={copyLink}>
@@ -166,45 +206,87 @@
 		padding-block: 1rem 2.5rem;
 	}
 
-	.mini-nav {
+	/* Status bar — the receipt folio / merchant header. */
+	.statusbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding-block: 0.5rem;
+		gap: 0.75rem;
+		padding-block: 0.5rem 0.75rem;
+		border-bottom: 2px dashed var(--rule);
+		font-family: var(--mono);
 	}
 
 	.home-link {
 		display: inline-flex;
 		align-items: center;
 		min-height: 2.75rem;
-		font-weight: 800;
+		font-family: var(--mono);
+		font-weight: 700;
 		font-size: 0.9375rem;
-		letter-spacing: 0.02em;
-		color: var(--fg);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--ink);
 		text-decoration: none;
 	}
 
+	.status-meta {
+		font-size: 0.6875rem;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	/* The share card as a ticket stub: receipt stock, hard ink border,
+	   die-cut notches mid-height on each side. */
 	.wrap-card {
 		position: relative;
-		overflow: hidden;
-		border-radius: var(--radius-lg);
-		border: 1px solid var(--border-dim);
-		padding: 1.375rem;
-		background:
-			radial-gradient(
-				30rem 20rem at 85% -15%,
-				color-mix(in srgb, var(--tint-a) 55%, transparent),
-				transparent 65%
-			),
-			radial-gradient(
-				24rem 18rem at -10% 110%,
-				color-mix(in srgb, var(--tint-b) 40%, transparent),
-				transparent 60%
-			),
-			var(--bg-raised);
 		display: flex;
 		flex-direction: column;
 		gap: 1.125rem;
+		padding: 1.375rem 1.25rem 1.5rem;
+		background: var(--receipt);
+		border: 1.5px solid var(--ink);
+		border-radius: var(--radius-lg);
+		--notch: 12px;
+		-webkit-mask:
+			radial-gradient(
+				circle at left center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			),
+			radial-gradient(
+				circle at right center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			);
+		-webkit-mask-composite: source-in;
+		mask:
+			radial-gradient(
+				circle at left center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			),
+			radial-gradient(
+				circle at right center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			);
+		mask-composite: intersect;
+	}
+
+	.ticket-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.stamp-mark {
+		animation: stamp-in 400ms ease both;
 	}
 
 	.who {
@@ -219,10 +301,14 @@
 	}
 
 	.who img {
-		width: 3rem;
-		height: 3rem;
+		width: 2.75rem;
+		height: 2.75rem;
 		border-radius: 50%;
-		border: 2px solid rgba(248, 250, 252, 0.55);
+		background: var(--receipt);
+		border: 2px solid var(--ink);
+		box-shadow:
+			0 0 0 2px var(--receipt),
+			0 0 0 3.5px var(--ink);
 	}
 
 	.name,
@@ -231,88 +317,205 @@
 	}
 
 	.name {
+		font-family: var(--mono);
 		font-weight: 700;
+		font-size: 0.9375rem;
+		letter-spacing: 0.02em;
 		line-height: 1.2;
 	}
 
 	.handle {
-		font-size: 0.875rem;
+		font-family: var(--mono);
+		font-size: 0.8125rem;
 		color: var(--muted);
 	}
 
 	.period {
 		margin-left: auto;
-		font-size: 0.6875rem;
-		font-weight: 800;
-		letter-spacing: 0.04em;
+		align-self: flex-start;
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
 		color: var(--muted);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
 
+	/* Big-number frame — solid ink/accent digits, no gradient clip. */
 	.headline {
+		position: relative;
 		text-align: center;
-		padding-block: 0.5rem;
+		padding: 1.5rem 0.75rem 1rem;
+		border: 1.5px solid var(--ink);
+		background: linear-gradient(0deg, rgba(27, 23, 18, 0.03), transparent 42%);
+	}
+
+	.headline .cap {
+		position: absolute;
+		top: -0.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 0 0.625rem;
+		background: var(--receipt);
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--muted);
+		white-space: nowrap;
 	}
 
 	.big-number {
-		font-size: clamp(3rem, 16vw, 5rem);
-		font-weight: 900;
-		line-height: 1;
-		letter-spacing: -0.03em;
-		background: linear-gradient(100deg, var(--tint-a), var(--tint-b));
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
+		font-family: var(--mono);
+		font-size: clamp(2.75rem, 15vw, 4.25rem);
+		font-weight: 700;
+		line-height: 0.92;
+		letter-spacing: -0.02em;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent-ink);
 	}
 
 	.headline h1 {
-		font-size: 1.125rem;
+		margin-top: 0.625rem;
+		font-size: 0.8125rem;
 		font-weight: 700;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
 		color: var(--muted);
-		margin-top: 0.375rem;
 	}
 
+	/* Stat ledger grid — hairline rules via a 1px gap over an ink frame. */
 	.stats {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+		gap: 1px;
 		margin: 0;
+		background: var(--rule-2);
+		border: 1px solid var(--ink);
 	}
 
-	.stats div {
+	.stats > div {
 		display: flex;
-		flex-direction: column;
-		gap: 0.125rem;
-		padding: 0.625rem 0.875rem;
-		border-radius: 10px;
-		background: rgba(15, 23, 42, 0.55);
-		border: 1px solid var(--border-dim);
+		flex-direction: column-reverse;
+		gap: 0.2rem;
+		padding: 0.7rem 0.85rem;
+		background: var(--receipt);
+	}
+
+	.stats > div:last-child:nth-child(odd) {
+		grid-column: 1 / -1;
 	}
 
 	.stats dt {
-		font-size: 0.75rem;
+		font-family: var(--mono);
+		font-size: 0.625rem;
 		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
 		color: var(--muted);
 	}
 
 	.stats dd {
 		margin: 0;
-		font-weight: 800;
+		font-family: var(--mono);
+		font-size: 1.375rem;
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: -0.01em;
+		color: var(--ink);
 		font-variant-numeric: tabular-nums;
 	}
 
+	/* Long-form reading stays in the sans register. */
 	.langs {
-		font-size: 0.9rem;
+		font-size: 0.9375rem;
+		line-height: 1.5;
 		text-align: center;
 	}
 
 	.verdict {
-		font-size: 0.9rem;
-		color: var(--muted);
-		font-weight: 600;
-		text-align: center;
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		padding: 0.75rem 0.85rem;
+		border: 1px solid var(--rule);
+		border-left: 3px solid var(--accent);
+		background: var(--band);
+	}
+
+	.verdict-emoji {
+		flex: 0 0 auto;
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+
+	.verdict-text {
+		font-family: var(--sans);
+		font-size: 0.9375rem;
+		line-height: 1.5;
+		color: var(--ink);
 		overflow-wrap: anywhere;
+	}
+
+	.verdict-text strong {
+		color: var(--accent-ink);
+		font-weight: 700;
+	}
+
+	.claimed {
+		color: var(--pen);
+		font-weight: 700;
+		text-decoration: line-through;
+		text-decoration-color: rgba(39, 75, 122, 0.55);
+	}
+
+	.agrees {
+		color: var(--muted);
+	}
+
+	.barcode-row {
+		margin-top: 0.25rem;
+	}
+
+	.barcode-row .cap {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.4rem;
+		font-family: var(--mono);
+		font-size: 0.5625rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.barcode-row .cap .id {
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* "Tear here" perforation between the stub and the share controls. */
+	.tear {
+		position: relative;
+		height: 0;
+		margin: 0.25rem 0;
+		border-top: 2px dashed var(--rule);
+	}
+
+	.tear::after {
+		content: '✂ TEAR HERE';
+		position: absolute;
+		top: -0.5rem;
+		right: 1rem;
+		padding: 0 0.375rem;
+		background: var(--paper);
+		font-family: var(--mono);
+		font-size: 0.5rem;
+		letter-spacing: 0.18em;
+		color: var(--muted);
 	}
 
 	.actions {
@@ -324,9 +527,12 @@
 	.footnote {
 		text-align: center;
 		font-size: 0.8125rem;
+		line-height: 1.6;
+		color: var(--muted);
 	}
 
 	.footnote a {
-		color: inherit;
+		color: var(--accent-ink);
+		text-underline-offset: 0.18em;
 	}
 </style>

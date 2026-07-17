@@ -123,13 +123,20 @@
 	image="/og?slug={data.result.share_slug}"
 />
 
-<main id="main-content" class="screen shell" tabindex="-1">
+<main
+	id="main-content"
+	class="screen shell"
+	style="--accent: {archetype.gradient[0]}; --accent-ink: color-mix(in srgb, {archetype
+		.gradient[0]} 65%, var(--ink));"
+	tabindex="-1"
+>
 	<nav class="mini-nav">
 		<a href="/" class="home-link">Developer Wrapped</a>
 		{#if !isPublic}
 			<span class="private-chip">🔒 Private</span>
 		{/if}
 	</nav>
+	<hr class="perf" aria-hidden="true" />
 
 	{#if justRevealed}
 		<p class="drumroll eyebrow fade-up">It's official</p>
@@ -171,9 +178,7 @@
 				{copied ? 'Link copied! 🎉' : 'Copy share link'}
 			</button>
 			{#if copyError}
-				<p class="card-error" role="alert">
-					Couldn't copy the link. Copy it from the address bar.
-				</p>
+				<p class="card-error" role="alert">Couldn't copy the link. Copy it from the address bar.</p>
 			{/if}
 			{#if canNativeShare}
 				<button class="btn btn--ghost" type="button" onclick={nativeShare}>Share…</button>
@@ -214,6 +219,12 @@
 		{/if}
 	</section>
 
+	<div class="receipt-tail" aria-hidden="true">
+		<hr class="perf" />
+		<span class="stamp-mark">Certified true copy</span>
+		<div class="barcode"></div>
+	</div>
+
 	<p class="footnote muted">
 		Result stored with <a href="https://appwrite.io" rel="noreferrer">Appwrite</a>. See who else got
 		wrapped on the <a href="/feed">live feed</a>.
@@ -229,35 +240,67 @@
 		padding-block: 1rem 2.5rem;
 	}
 
+	/* Header reads as a receipt masthead: mono wordmark, tear rule below. */
 	.mini-nav {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 0.75rem;
 		padding-block: 0.5rem;
 	}
 
 	.home-link {
 		display: inline-flex;
 		align-items: center;
+		gap: 0.5ch;
 		min-height: 2.75rem;
-		font-weight: 800;
-		font-size: 0.9375rem;
-		letter-spacing: 0.02em;
-		color: var(--fg);
+		font-family: var(--mono);
+		font-weight: 700;
+		font-size: 0.8125rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--ink);
 		text-decoration: none;
 	}
 
-	.private-chip {
-		font-size: 0.8125rem;
+	.home-link::before {
+		content: '‹';
+		color: var(--accent);
 		font-weight: 700;
-		padding: 0.25rem 0.625rem;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--warn) 20%, var(--bg-raised));
-		border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent);
 	}
 
+	.home-link:hover {
+		color: var(--accent-ink);
+	}
+
+	/* Privacy is the sober register — pen blue, machine-set tag. */
+	.private-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45ch;
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		padding: 0.3rem 0.55rem;
+		border-radius: var(--radius-sm);
+		color: var(--pen);
+		border: 1px solid color-mix(in srgb, var(--pen) 55%, transparent);
+		background: color-mix(in srgb, var(--pen) 8%, var(--receipt));
+	}
+
+	/* The reveal moment, stamped in the archetype's accent. */
 	.drumroll {
-		text-align: center;
+		align-self: center;
+		margin-top: 0.25rem;
+		padding: 0.4rem 0.85rem;
+		letter-spacing: 0.24em;
+		color: var(--accent-ink);
+		border: 1.5px solid var(--accent);
+		border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--accent) 10%, var(--receipt));
 	}
 
 	.actions {
@@ -267,22 +310,39 @@
 	}
 
 	.card-error {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5ch;
 		font-size: 0.875rem;
+		line-height: 1.45;
 		color: var(--warn);
 	}
 
+	.card-error::before {
+		content: '⚠';
+		flex: 0 0 auto;
+		font-family: var(--mono);
+	}
+
+	/* Publish confirmation is a trust document: calm pen register on receipt stock. */
 	.publish-box {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 1rem 1.125rem;
+		border: 1px solid var(--rule-2);
+		border-left: 3px solid var(--pen);
 		border-radius: var(--radius-md);
-		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-		background: color-mix(in srgb, var(--accent) 12%, var(--bg-raised));
+		background: color-mix(in srgb, var(--pen) 6%, var(--receipt));
 	}
 
 	.publish-title {
-		font-weight: 800;
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--pen);
 	}
 
 	.publish-copy {
@@ -290,9 +350,22 @@
 		line-height: 1.5;
 	}
 
+	/* Decorative receipt tail: tear, certification stamp, barcode. */
+	.receipt-tail {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		margin-top: 0.5rem;
+	}
+
+	.receipt-tail .stamp-mark {
+		align-self: center;
+	}
+
 	.footnote {
 		text-align: center;
 		font-size: 0.8125rem;
+		line-height: 1.5;
 	}
 
 	.footnote a {

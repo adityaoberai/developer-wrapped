@@ -133,7 +133,8 @@
 	}
 
 	function onKeydown(event: KeyboardEvent) {
-		if (!report || syncing) return;
+		// The share modal owns the keyboard while open — don't advance the deck behind it.
+		if (!report || syncing || shareOpen) return;
 		const target = event.target as HTMLElement | null;
 		if (target && ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) {
 			if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -230,6 +231,22 @@
 	// slow story render can't overwrite a newer square one.
 	let previewToken = 0;
 
+	// The share-card image lives in a focused modal opened from the verdict slide.
+	let shareOpen = $state(false);
+	let shareDialog = $state<HTMLDialogElement | null>(null);
+
+	function openShare() {
+		shareOpen = true;
+		if (shareDialog && !shareDialog.open) shareDialog.showModal();
+	}
+	function closeShare() {
+		shareDialog?.close();
+	}
+	function backdropClose(event: MouseEvent) {
+		// A click that lands on the <dialog> element itself is the backdrop.
+		if (event.target === shareDialog) closeShare();
+	}
+
 	onMount(() => {
 		canNativeShare = typeof navigator.share === 'function';
 		return () => {
@@ -246,13 +263,13 @@
 	const previewShownFormat = $derived(previewFormat ?? cardFormat);
 
 	// Live preview of the exact PNG the download/share buttons produce,
-	// re-rendered whenever the verdict slide is visible and the format,
-	// metrics, or quiz result changes.
+	// re-rendered whenever the share modal is open and the format, metrics, or
+	// quiz result changes.
 	$effect(() => {
 		const format = cardFormat;
-		const onVerdictSlide = slide === TOTAL_SLIDES - 1;
 		const input = metrics && githubArchetype ? cardInput() : null;
-		if (!onVerdictSlide || !input) return;
+		// Only render the (potentially heavy) canvas while the share modal is open.
+		if (!shareOpen || !input) return;
 		const token = ++previewToken;
 		previewPending = true;
 		void renderWrappedCard(input, format)
@@ -346,49 +363,75 @@
 
 <div
 	class="deck"
-	style:--tint-a={githubArchetype?.gradient[0] ?? '#7C3AED'}
-	style:--tint-b={githubArchetype?.gradient[1] ?? '#DB2777'}
+	style:--accent={githubArchetype?.gradient[0] ?? 'var(--stamp)'}
+	style:--accent-ink={githubArchetype
+		? `color-mix(in srgb, ${githubArchetype.gradient[0]} 65%, var(--ink))`
+		: 'var(--stamp-ink)'}
 >
 	{#if syncing}
 		<main id="main-content" class="loading shell" tabindex="-1" role="status" aria-live="polite">
-			<div class="orb" aria-hidden="true"></div>
-			<h1 class="pulse">Interviewing your commits…</h1>
+			<div class="printer" aria-hidden="true">
+				<div class="printer-slot"></div>
+				<div class="printer-sheet">
+					<span class="printer-line"></span>
+					<span class="printer-line"></span>
+					<span class="printer-line"></span>
+					<span class="printer-line"></span>
+				</div>
+			</div>
+			<p class="eyebrow load-eyebrow">Now printing</p>
+			<h1 class="pulse">
+				Interviewing your commits…<span class="caret" aria-hidden="true"></span>
+			</h1>
 			<p class="muted">
 				Collecting 12 months of aggregate contribution data from GitHub. Counts only, never your
 				code.
 			</p>
 		</main>
 	{:else if !report}
-		<main id="main-content" class="loading shell" tabindex="-1">
+		<main id="main-content" class="loading shell error-state" tabindex="-1">
+			<span class="stamp-mark error-stamp" aria-hidden="true">Void · No Record</span>
+			<p class="eyebrow">Signal lost</p>
 			<span class="big-emoji" aria-hidden="true">📡</span>
 			<h1>Couldn't gather the evidence</h1>
 			<p class="muted" role="alert">{syncError}</p>
-			{#if needsReconnect}
-				<a class="btn" href="/auth/login">Reconnect GitHub</a>
-			{:else}
-				<button class="btn" type="button" onclick={sync}>Try again</button>
-			{/if}
-			<a class="btn btn--ghost" href="/welcome">Back to start</a>
+			<div class="error-actions">
+				{#if needsReconnect}
+					<a class="btn" href="/auth/login">Reconnect GitHub</a>
+				{:else}
+					<button class="btn" type="button" onclick={sync}>Try again</button>
+				{/if}
+				<a class="btn btn--ghost" href="/welcome">Back to start</a>
+			</div>
 		</main>
 	{:else if metrics}
 		<header class="deck-top">
 			<div class="deck-top-inner shell">
-				<div
-					class="segments"
-					role="progressbar"
-					aria-label="Story progress"
-					aria-valuemin={1}
-					aria-valuemax={TOTAL_SLIDES}
-					aria-valuenow={slide + 1}
-					aria-valuetext="Slide {slide + 1} of {TOTAL_SLIDES}: {slideTitles[slide]}"
-				>
-					{#each slideTitles as title, i (title)}
-						<span class="segment" class:done={i <= slide}></span>
-					{/each}
+				<div class="statusbar" aria-hidden="true">
+					<span class="sb-rec">REC ●</span>
+					<span class="sb-title">{slideTitles[slide]}</span>
+					<span class="sb-folio"
+						>SLIDE {(slide + 1).toString().padStart(2, '0')}/{TOTAL_SLIDES}</span
+					>
 				</div>
-				{#if slide < TOTAL_SLIDES - 1}
-					<button class="skip" type="button" onclick={skipToEnd}>Skip</button>
-				{/if}
+				<div class="progress-row">
+					<div
+						class="segments"
+						role="progressbar"
+						aria-label="Story progress"
+						aria-valuemin={1}
+						aria-valuemax={TOTAL_SLIDES}
+						aria-valuenow={slide + 1}
+						aria-valuetext="Slide {slide + 1} of {TOTAL_SLIDES}: {slideTitles[slide]}"
+					>
+						{#each slideTitles as title, i (title)}
+							<span class="segment" class:done={i <= slide}></span>
+						{/each}
+					</div>
+					{#if slide < TOTAL_SLIDES - 1}
+						<button class="skip" type="button" onclick={skipToEnd}>Skip</button>
+					{/if}
+				</div>
 			</div>
 		</header>
 
@@ -397,7 +440,9 @@
 				<section class="slide fade-up" aria-labelledby="slide-heading">
 					{#if slide === 0}
 						<p class="eyebrow">Developer Wrapped</p>
-						<h1 id="slide-heading" tabindex="-1">Your year, with receipts.</h1>
+						<h1 id="slide-heading" tabindex="-1">
+							Your year, with receipts.<span class="caret" aria-hidden="true"></span>
+						</h1>
 						<p class="hero-line">{periodLabel(metrics.period.start, metrics.period.end)}</p>
 						<p class="muted">
 							{metrics.period.days} days of aggregate GitHub activity, synced
@@ -409,10 +454,18 @@
 								Your GitHub account is younger than the window, so we counted from day one.
 							{/if}
 						</p>
-						<p class="source">source: period={metrics.period.key}, coverage={metrics.coverage}</p>
+						<div class="source-stamp">
+							<span class="tag">SOURCE</span>
+							<span class="val"
+								>period=<b>{metrics.period.key}</b>, coverage=<b>{metrics.coverage}</b></span
+							>
+						</div>
 					{:else if slide === 1}
 						<p class="eyebrow">The volume</p>
-						<p class="big-number">{fmt(metrics.totals.contributions)}</p>
+						<div class="bignum-frame">
+							<span class="bignum-cap">Total contributions</span>
+							<p class="big-number">{fmt(metrics.totals.contributions)}</p>
+						</div>
 						<h1 id="slide-heading" tabindex="-1">contributions in {metrics.period.days} days</h1>
 						<p class="hero-line">
 							You showed up on <strong>{fmt(metrics.activeDays)}</strong> of them.
@@ -423,9 +476,14 @@
 								itemize.
 							</p>
 						{/if}
-						<p class="source">
-							source: total_contributions={metrics.totals.contributions}, active_days={metrics.activeDays}
-						</p>
+						<div class="source-stamp">
+							<span class="tag">SOURCE</span>
+							<span class="val"
+								>total_contributions=<b>{metrics.totals.contributions}</b>, active_days=<b
+									>{metrics.activeDays}</b
+								></span
+							>
+						</div>
 					{:else if slide === 2}
 						<p class="eyebrow">The rhythm</p>
 						<h1 id="slide-heading" tabindex="-1">When you actually work</h1>
@@ -463,7 +521,10 @@
 								</div>
 							{/if}
 						</dl>
-						<p class="source">source: busiest_month, busiest_weekday, longest_streak, peak_day</p>
+						<div class="source-stamp">
+							<span class="tag">SOURCE</span>
+							<span class="val">busiest_month, busiest_weekday, longest_streak, peak_day</span>
+						</div>
 					{:else if slide === 3}
 						<p class="eyebrow">The collaboration</p>
 						<h1 id="slide-heading" tabindex="-1">Playing with others</h1>
@@ -485,10 +546,15 @@
 								<dd>{fmt(metrics.totals.commits)}</dd>
 							</div>
 						</dl>
-						<p class="source">
-							source: pull_requests={metrics.totals.pullRequests}, reviews={metrics.totals.reviews},
-							issues={metrics.totals.issues}, commits={metrics.totals.commits}
-						</p>
+						<div class="source-stamp">
+							<span class="tag">SOURCE</span>
+							<span class="val"
+								>pull_requests=<b>{metrics.totals.pullRequests}</b>, reviews=<b
+									>{metrics.totals.reviews}</b
+								>, issues=<b>{metrics.totals.issues}</b>, commits=<b>{metrics.totals.commits}</b
+								></span
+							>
+						</div>
 					{:else if slide === 4}
 						<p class="eyebrow">The territory</p>
 						<h1 id="slide-heading" tabindex="-1">
@@ -512,30 +578,36 @@
 						{:else}
 							<p class="hero-line">No public language data this year. A ghost. Respect.</p>
 						{/if}
-						<p class="source">
-							source: repositories_contributed_to={metrics.repositories.contributedTo},
-							public_language_mix
-						</p>
+						<div class="source-stamp">
+							<span class="tag">SOURCE</span>
+							<span class="val"
+								>repositories_contributed_to=<b>{metrics.repositories.contributedTo}</b>,
+								public_language_mix</span
+							>
+						</div>
 					{:else if slide === 5}
 						<p class="eyebrow">The observation</p>
 						<span class="big-emoji" aria-hidden="true">🔎</span>
 						<h1 id="slide-heading" tabindex="-1">We noticed something.</h1>
 						{#if observation}
 							<p class="hero-line">{observation.text}</p>
-							<p class="source">source: {observation.source}</p>
+							<div class="source-stamp">
+								<span class="tag">SOURCE</span>
+								<span class="val">{observation.source}</span>
+							</div>
 						{/if}
 					{:else if slide === 6}
 						<p class="eyebrow">You said vs. GitHub says</p>
 						{#if quizArchetype && githubArchetype}
 							<h1 id="slide-heading" tabindex="-1">The confrontation</h1>
 							<div class="versus">
-								<div class="versus-side">
+								<div class="versus-side versus-side--said">
 									<p class="versus-label">You said</p>
 									<span class="versus-emoji" aria-hidden="true">{quizArchetype.emoji}</span>
 									<p class="versus-name">{quizArchetype.name}</p>
 								</div>
 								<span class="versus-vs" aria-hidden="true">vs</span>
-								<div class="versus-side">
+								<div class="versus-side versus-side--verdict">
 									<p class="versus-label">GitHub says</p>
 									<span class="versus-emoji" aria-hidden="true">{githubArchetype.emoji}</span>
 									<p class="versus-name">{githubArchetype.name}</p>
@@ -547,7 +619,10 @@
 									: 'The quiz caught your self-image. The commit log caught you.'}
 							</p>
 							{#if verdict}
-								<p class="source">source: {verdict.reason.source}</p>
+								<div class="source-stamp">
+									<span class="tag">SOURCE</span>
+									<span class="val">{verdict.reason.source}</span>
+								</div>
 							{/if}
 						{:else}
 							<h1 id="slide-heading" tabindex="-1">One side of this story is missing</h1>
@@ -558,14 +633,31 @@
 							<a class="btn btn--subtle quiz-cta" href="/quiz">Take the quiz</a>
 						{/if}
 					{:else if slide === 7}
-						<p class="eyebrow">The verdict</p>
+						<div class="verdict-head">
+							<p class="eyebrow">The verdict</p>
+							<span class="stamp-mark verdict-stamp" aria-hidden="true">Certified · Exhibit A</span>
+						</div>
 						{#if githubArchetype && verdict}
-							<span class="big-emoji" aria-hidden="true">{githubArchetype.emoji}</span>
-							<h1 id="slide-heading" tabindex="-1">
-								GitHub says: {githubArchetype.name}
-							</h1>
-							<p class="hero-line">{verdict.reason.text}</p>
-							<p class="source">source: {verdict.reason.source}</p>
+							<article class="ticket">
+								<div class="ticket__in">
+									<span class="big-emoji" aria-hidden="true">{githubArchetype.emoji}</span>
+									<h1 id="slide-heading" tabindex="-1">
+										GitHub says: {githubArchetype.name}
+									</h1>
+									<p class="hero-line">{verdict.reason.text}</p>
+									<div class="barcode-row">
+										<div class="barcode-cap">
+											<span>NO RETURNS · NO REFUNDS</span>
+											<span>GITHUB HAS TESTIFIED</span>
+										</div>
+										<div class="barcode" aria-hidden="true"></div>
+									</div>
+									<div class="source-stamp">
+										<span class="tag">SOURCE</span>
+										<span class="val">{verdict.reason.source}</span>
+									</div>
+								</div>
+							</article>
 						{/if}
 
 						<div class="publish" aria-label="Sharing controls">
@@ -615,61 +707,9 @@
 								<p class="card-error" role="alert">That didn't go through. Try again.</p>
 							{/if}
 
-							<div class="card-controls">
-								<div
-									class="card-preview"
-									style:aspect-ratio={PREVIEW_RATIOS[previewShownFormat]}
-									class:card-preview--wide={previewShownFormat === 'square'}
-									class:card-preview--updating={previewPending && Boolean(cardPreviewUrl)}
-								>
-									{#if cardPreviewUrl}
-										<img
-											src={cardPreviewUrl}
-											alt="Share card preview, {CARD_FORMATS.find(
-												(f) => f.id === previewShownFormat
-											)?.label} format"
-										/>
-									{:else}
-										<p class="card-preview-loading" role="status">Rendering preview…</p>
-									{/if}
-								</div>
-								<div class="formats" role="radiogroup" aria-label="Share card format">
-									{#each CARD_FORMATS as format (format.id)}
-										<button
-											class="format"
-											class:active={cardFormat === format.id}
-											type="button"
-											role="radio"
-											aria-checked={cardFormat === format.id}
-											onclick={() => (cardFormat = format.id)}
-										>
-											{format.label} · {format.ratio}
-										</button>
-									{/each}
-								</div>
-								<button
-									class="btn btn--subtle"
-									type="button"
-									onclick={downloadCard}
-									disabled={cardBusy}
-									aria-busy={cardBusy}
-								>
-									{cardBusy ? 'Rendering card…' : 'Download share card'}
-								</button>
-								{#if canNativeShare}
-									<button
-										class="btn btn--ghost"
-										type="button"
-										onclick={shareCard}
-										disabled={cardBusy}
-									>
-										Share…
-									</button>
-								{/if}
-								{#if cardError}
-									<p class="card-error" role="alert">Couldn't render the card. Try again.</p>
-								{/if}
-							</div>
+							<button class="btn btn--subtle share-trigger" type="button" onclick={openShare}>
+								Get your share card
+							</button>
 
 							<button class="resync" type="button" onclick={sync}>Refresh GitHub data</button>
 						</div>
@@ -694,28 +734,94 @@
 				</button>
 			</div>
 		</footer>
+
+		<!-- Share-card modal: a focused "printout" of the shareable image. -->
+		<dialog
+			class="share-modal"
+			bind:this={shareDialog}
+			onclose={() => (shareOpen = false)}
+			onclick={backdropClose}
+			aria-labelledby="share-modal-title"
+		>
+			<div class="share-modal__sheet">
+				<div class="statusbar share-modal__bar">
+					<span class="sb-rec">REC ●</span>
+					<span class="sb-title" id="share-modal-title">Share card</span>
+					<button class="sb-close" type="button" onclick={closeShare} aria-label="Close share card">
+						✕
+					</button>
+				</div>
+				<div class="share-modal__body">
+					<p class="eyebrow">Print it · post it</p>
+					<div
+						class="card-preview"
+						style:aspect-ratio={PREVIEW_RATIOS[previewShownFormat]}
+						class:card-preview--wide={previewShownFormat === 'square'}
+						class:card-preview--updating={previewPending && Boolean(cardPreviewUrl)}
+					>
+						{#if cardPreviewUrl}
+							<img
+								src={cardPreviewUrl}
+								alt="Share card preview, {CARD_FORMATS.find((f) => f.id === previewShownFormat)
+									?.label} format"
+							/>
+						{:else}
+							<p class="card-preview-loading" role="status">Rendering preview…</p>
+						{/if}
+					</div>
+					<div class="formats" role="radiogroup" aria-label="Share card format">
+						{#each CARD_FORMATS as format (format.id)}
+							<button
+								class="format"
+								class:active={cardFormat === format.id}
+								type="button"
+								role="radio"
+								aria-checked={cardFormat === format.id}
+								onclick={() => (cardFormat = format.id)}
+							>
+								{format.label} · {format.ratio}
+							</button>
+						{/each}
+					</div>
+					<div class="share-actions">
+						<button
+							class="btn"
+							type="button"
+							onclick={downloadCard}
+							disabled={cardBusy}
+							aria-busy={cardBusy}
+						>
+							{cardBusy ? 'Rendering card…' : '↧ Download card'}
+						</button>
+						{#if canNativeShare}
+							<button class="btn btn--ghost" type="button" onclick={shareCard} disabled={cardBusy}>
+								Share…
+							</button>
+						{/if}
+					</div>
+					{#if cardError}
+						<p class="card-error" role="alert">Couldn't render the card. Try again.</p>
+					{/if}
+					<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{actionStatus}</p>
+				</div>
+			</div>
+		</dialog>
 	{/if}
 </div>
 
 <style>
+	/* The deck is a printout: warm paper, no glow. The body supplies the
+	   fibrous grain; the deck just lays out the receipt column. */
 	.deck {
 		min-height: 100dvh;
 		display: flex;
 		flex-direction: column;
-		background:
-			radial-gradient(
-				60rem 40rem at 50% -20%,
-				color-mix(in srgb, var(--tint-a) 22%, transparent),
-				transparent 70%
-			),
-			radial-gradient(
-				50rem 36rem at 50% 120%,
-				color-mix(in srgb, var(--tint-b) 16%, transparent),
-				transparent 70%
-			),
-			var(--bg);
+		background: transparent;
 	}
 
+	/* ============================================================
+	   LOADING — the "NOW PRINTING" printer-feed moment.
+	   ============================================================ */
 	.loading {
 		flex: 1;
 		display: flex;
@@ -727,65 +833,200 @@
 		padding-block: 3rem;
 	}
 
-	.orb {
-		width: 5.5rem;
+	.load-eyebrow {
+		margin-top: 0.25rem;
+	}
+
+	/* A little thermal printer feeding a receipt out of its slot. */
+	.printer {
+		position: relative;
+		width: 8.5rem;
 		height: 5.5rem;
-		border-radius: 50%;
-		background: conic-gradient(from 0deg, var(--tint-a), var(--tint-b), var(--tint-a));
-		animation:
-			spin 1.4s linear infinite,
-			pulse-soft 1.4s ease-in-out infinite;
-		filter: blur(1px);
+	}
+
+	.printer-slot {
+		position: absolute;
+		inset: 0 0 auto 0;
+		height: 1.5rem;
+		background: var(--ink);
+		border-radius: var(--radius-md) var(--radius-md) 0 0;
+		z-index: 2;
+	}
+
+	.printer-slot::after {
+		content: '';
+		position: absolute;
+		left: 12%;
+		right: 12%;
+		bottom: 0.32rem;
+		height: 0.28rem;
+		background: var(--paper-2);
+		box-shadow: inset 0 0 0 1px rgba(27, 23, 18, 0.5);
+		border-radius: 999px;
+	}
+
+	.printer-sheet {
+		position: absolute;
+		top: 1.1rem;
+		left: 50%;
+		width: 68%;
+		transform: translateX(-50%);
+		background: var(--receipt);
+		border: 1px solid var(--rule);
+		border-top: 0;
+		box-shadow: var(--shadow-card);
+		padding: 0.65rem 0.7rem 0.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.32rem;
+		overflow: hidden;
+		animation: feed 1.9s ease-in-out infinite;
+	}
+
+	.printer-line {
+		height: 0.28rem;
+		border-radius: 999px;
+		background: var(--rule);
+	}
+
+	.printer-line:nth-child(1) {
+		width: 100%;
+		background: var(--accent);
+	}
+	.printer-line:nth-child(2) {
+		width: 82%;
+	}
+	.printer-line:nth-child(3) {
+		width: 92%;
+	}
+	.printer-line:nth-child(4) {
+		width: 60%;
+	}
+
+	@keyframes feed {
+		0% {
+			clip-path: inset(0 0 100% 0);
+		}
+		55% {
+			clip-path: inset(0 0 0 0);
+		}
+		100% {
+			clip-path: inset(0 0 0 0);
+		}
 	}
 
 	.pulse {
 		animation: pulse-soft 1.6s ease-in-out infinite;
 	}
 
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
+	/* ============================================================
+	   ERROR STATE — a voided receipt.
+	   ============================================================ */
+	.error-state {
+		gap: 0.75rem;
 	}
 
+	.error-stamp {
+		align-self: center;
+		transform: rotate(-5deg);
+		font-size: 0.6875rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.error-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		width: 100%;
+		max-width: 20rem;
+		margin-top: 0.75rem;
+	}
+
+	/* ============================================================
+	   DECK CHROME — status bar + segmented progress.
+	   ============================================================ */
 	.deck-top {
 		position: sticky;
 		top: 0;
 		z-index: 10;
 		padding-top: env(safe-area-inset-top);
+		background: color-mix(in srgb, var(--paper) 88%, transparent);
+		backdrop-filter: blur(6px);
+		border-bottom: 1px solid var(--rule-2);
 	}
 
 	.deck-top-inner {
 		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding-block: 0.625rem 0.75rem;
+	}
+
+	.statusbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		font-family: var(--mono);
+		font-size: 0.6875rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.sb-rec {
+		color: var(--stamp-ink);
+		white-space: nowrap;
+	}
+
+	.sb-title {
+		flex: 1;
+		text-align: center;
+		color: var(--ink);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.sb-folio {
+		white-space: nowrap;
+	}
+
+	.progress-row {
+		display: flex;
 		align-items: center;
 		gap: 0.875rem;
-		padding-block: 0.875rem;
 	}
 
 	.segments {
 		flex: 1;
 		display: flex;
-		gap: 0.375rem;
+		gap: 0.3125rem;
 	}
 
 	.segment {
 		flex: 1;
-		height: 0.375rem;
-		border-radius: 999px;
-		background: rgba(226, 232, 240, 0.18);
+		height: 0.4375rem;
+		border: 1px solid var(--rule);
+		background: var(--band);
 	}
 
 	.segment.done {
-		background: linear-gradient(90deg, var(--accent-bright), #f0abfc);
+		background: var(--accent);
+		border-color: var(--accent);
 	}
 
 	.skip {
 		border: 0;
 		background: none;
 		color: var(--muted);
-		font: inherit;
-		font-size: 0.875rem;
+		font-family: var(--mono);
+		font-size: 0.75rem;
 		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
 		cursor: pointer;
 		min-height: 2.75rem;
 		padding-inline: 0.5rem;
@@ -793,6 +1034,13 @@
 		text-underline-offset: 0.2em;
 	}
 
+	.skip:hover {
+		color: var(--stamp-ink);
+	}
+
+	/* ============================================================
+	   STAGE + SLIDES
+	   ============================================================ */
 	.stage {
 		flex: 1;
 		display: flex;
@@ -811,28 +1059,63 @@
 
 	.slide h1 {
 		font-size: clamp(1.625rem, 7vw, 2.5rem);
-		font-weight: 900;
+		font-weight: 700;
 	}
 
 	.slide h1:focus {
 		outline: none;
 	}
 
+	/* Long-form narration reads in sans for legibility. */
 	.hero-line {
+		font-family: var(--sans);
 		font-size: 1.125rem;
 		line-height: 1.55;
-		max-width: 26rem;
+		max-width: 28rem;
+		text-wrap: balance;
+	}
+
+	.hero-line strong {
+		color: var(--accent-ink);
+		font-weight: 700;
+	}
+
+	/* THE VOLUME — a solid-ink number framed like the mockup's bignum. */
+	.bignum-frame {
+		position: relative;
+		width: 100%;
+		max-width: 22rem;
+		margin-top: 0.5rem;
+		padding: 1.5rem 1rem 1.125rem;
+		border: 1.5px solid var(--ink);
+		border-radius: var(--radius-md);
+		background: linear-gradient(0deg, rgba(27, 23, 18, 0.03), transparent 45%);
+	}
+
+	.bignum-cap {
+		position: absolute;
+		top: -0.55rem;
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 0 0.625rem;
+		background: var(--paper);
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--muted);
+		white-space: nowrap;
 	}
 
 	.big-number {
-		font-size: clamp(3.5rem, 18vw, 6rem);
-		font-weight: 900;
-		line-height: 1;
-		letter-spacing: -0.03em;
-		background: linear-gradient(100deg, var(--tint-a), var(--tint-b));
-		-webkit-background-clip: text;
-		background-clip: text;
-		color: transparent;
+		font-family: var(--mono);
+		font-size: clamp(3.5rem, 18vw, 5.5rem);
+		font-weight: 700;
+		line-height: 0.95;
+		letter-spacing: -0.02em;
+		color: var(--ink);
+		font-variant-numeric: tabular-nums;
 	}
 
 	.big-emoji {
@@ -840,56 +1123,62 @@
 		line-height: 1;
 	}
 
-	.source {
-		margin-top: 0.5rem;
-		font-size: 0.75rem;
-		font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
-		color: color-mix(in srgb, var(--muted) 75%, transparent);
-		overflow-wrap: anywhere;
-	}
-
+	/* ============================================================
+	   LEDGER FACTS — receipt line items with dot leaders.
+	   ============================================================ */
 	.facts {
 		display: flex;
 		flex-direction: column;
-		gap: 0.625rem;
 		width: 100%;
+		max-width: 26rem;
 		margin: 0.5rem 0 0;
+		font-family: var(--mono);
 	}
 
 	.facts div {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		gap: 1rem;
-		padding: 0.75rem 1rem;
-		border-radius: var(--radius-md);
-		border: 1px solid var(--border-dim);
-		background: color-mix(in srgb, var(--bg-raised) 82%, transparent);
+		gap: 0.75ch;
+		padding: 0.6rem 0.25rem;
+		border-bottom: 1px dotted var(--rule);
+	}
+
+	.facts div:first-child {
+		border-top: 1px dotted var(--rule);
 	}
 
 	.facts dt {
-		font-size: 0.875rem;
-		font-weight: 700;
+		font-size: 0.8125rem;
+		font-weight: 400;
 		color: var(--muted);
 		text-align: left;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 
 	.facts dd {
 		margin: 0;
-		font-weight: 800;
+		font-weight: 700;
 		font-variant-numeric: tabular-nums;
 		text-align: right;
 		overflow-wrap: anywhere;
+		color: var(--ink);
 	}
 
+	/* ============================================================
+	   THE TERRITORY — printed meter rows for the language mix.
+	   ============================================================ */
 	.langs {
 		display: flex;
 		flex-direction: column;
 		gap: 0.625rem;
 		width: 100%;
+		max-width: 26rem;
 		list-style: none;
 		padding: 0;
 		margin-top: 0.5rem;
+		font-family: var(--mono);
 	}
 
 	.langs li {
@@ -900,24 +1189,30 @@
 	}
 
 	.lang-name {
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 		font-weight: 700;
 		text-align: left;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 		overflow-wrap: anywhere;
 	}
 
 	.lang-bar {
-		height: 0.5rem;
-		border-radius: 999px;
-		background: rgba(226, 232, 240, 0.14);
+		height: 0.75rem;
+		border: 1px solid var(--rule);
+		background: var(--band);
 		overflow: hidden;
 	}
 
 	.lang-fill {
 		display: block;
 		height: 100%;
-		border-radius: 999px;
-		background: linear-gradient(90deg, var(--tint-a), var(--tint-b));
+		background-color: var(--accent);
+		background-image: repeating-linear-gradient(
+			45deg,
+			rgba(251, 249, 243, 0.28) 0 3px,
+			transparent 3px 6px
+		);
 	}
 
 	.lang-share {
@@ -928,12 +1223,16 @@
 		text-align: right;
 	}
 
+	/* ============================================================
+	   THE CONFRONTATION — "you said" (struck, pen) vs "GitHub says".
+	   ============================================================ */
 	.versus {
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.875rem;
 		width: 100%;
+		max-width: 30rem;
 		margin-top: 0.5rem;
 	}
 
@@ -944,18 +1243,36 @@
 		align-items: center;
 		gap: 0.375rem;
 		padding: 1rem 0.75rem;
+		border: 1px solid var(--rule);
 		border-radius: var(--radius-md);
-		border: 1px solid var(--border-dim);
-		background: color-mix(in srgb, var(--bg-raised) 82%, transparent);
+		background: var(--receipt);
 		min-width: 0;
 	}
 
+	.versus-side--said {
+		border-color: color-mix(in srgb, var(--pen) 55%, var(--rule));
+		background: rgba(39, 75, 122, 0.05);
+	}
+
+	.versus-side--verdict {
+		border-color: color-mix(in srgb, var(--accent) 55%, var(--rule));
+	}
+
 	.versus-label {
-		font-size: 0.75rem;
-		font-weight: 800;
+		font-family: var(--mono);
+		font-size: 0.625rem;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.16em;
 		color: var(--muted);
+	}
+
+	.versus-side--said .versus-label {
+		color: var(--pen);
+	}
+
+	.versus-side--verdict .versus-label {
+		color: var(--accent-ink);
 	}
 
 	.versus-emoji {
@@ -964,75 +1281,181 @@
 	}
 
 	.versus-name {
-		font-weight: 800;
+		font-family: var(--mono);
+		font-weight: 700;
 		font-size: 0.9375rem;
 		overflow-wrap: anywhere;
 	}
 
+	/* "You said" is struck through in pen — the claim the log overrules. */
+	.versus-side--said .versus-name {
+		color: var(--pen);
+		text-decoration: line-through;
+		text-decoration-color: rgba(39, 75, 122, 0.55);
+	}
+
+	.versus-side--verdict .versus-name {
+		color: var(--accent-ink);
+	}
+
 	.versus-vs {
-		font-weight: 900;
+		align-self: center;
+		font-family: var(--mono);
+		font-weight: 700;
+		font-size: 0.8125rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
 		color: var(--muted);
 	}
 
 	.quiz-cta {
 		margin-top: 0.5rem;
+		max-width: 20rem;
 	}
 
+	/* ============================================================
+	   THE VERDICT — a certified ticket stub.
+	   ============================================================ */
+	.verdict-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		width: 100%;
+		max-width: 30rem;
+	}
+
+	.verdict-stamp {
+		animation: stamp-in 420ms ease both;
+	}
+
+	.ticket {
+		position: relative;
+		width: 100%;
+		max-width: 30rem;
+		background: var(--receipt);
+		border: 1.5px solid var(--ink);
+		box-shadow: var(--shadow-card);
+		--notch: 13px;
+		-webkit-mask:
+			radial-gradient(
+				circle at left center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			),
+			radial-gradient(
+				circle at right center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			);
+		-webkit-mask-composite: source-in;
+		mask:
+			radial-gradient(
+				circle at left center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			),
+			radial-gradient(
+				circle at right center,
+				transparent var(--notch),
+				#000 calc(var(--notch) + 0.5px)
+			);
+		mask-composite: intersect;
+	}
+
+	.ticket__in {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.875rem;
+		padding: 1.5rem 1.375rem 1.375rem;
+	}
+
+	.barcode-row {
+		width: 100%;
+		margin-top: 0.25rem;
+	}
+
+	.barcode-cap {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.75rem;
+		font-family: var(--mono);
+		font-size: 0.5625rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted);
+		margin-bottom: 0.375rem;
+	}
+
+	/* ============================================================
+	   PUBLISH + SHARE CONTROLS
+	   ============================================================ */
 	.publish {
 		display: flex;
 		flex-direction: column;
 		gap: 0.875rem;
 		width: 100%;
-		margin-top: 1rem;
+		max-width: 30rem;
+		margin-top: 1.25rem;
 	}
 
 	.publish-box {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-		padding: 1rem 1.125rem;
+		padding: 1.125rem;
+		border: 1px solid var(--rule);
+		border-left: 3px solid var(--pen);
 		border-radius: var(--radius-md);
-		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-		background: color-mix(in srgb, var(--accent) 12%, var(--bg-raised));
+		background: rgba(39, 75, 122, 0.055);
 		text-align: left;
 	}
 
 	.publish-title {
-		font-weight: 800;
+		font-family: var(--mono);
+		font-weight: 700;
+		font-size: 0.75rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--pen);
 	}
 
+	/* Sober register: the privacy paragraph reads calmly in sans. */
 	.publish-copy {
+		font-family: var(--sans);
 		font-size: 0.9075rem;
-		line-height: 1.5;
+		line-height: 1.55;
 	}
 
 	.share-url {
-		font-size: 0.875rem;
-		font-family: ui-monospace, 'Cascadia Code', 'SF Mono', monospace;
+		font-family: var(--mono);
+		font-size: 0.8125rem;
+		font-weight: 700;
 		overflow-wrap: anywhere;
-		color: var(--accent-bright);
+		color: var(--accent-ink);
 	}
 
-	.card-controls {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
+	.share-trigger {
+		max-width: 30rem;
 	}
 
 	.card-preview {
 		align-self: center;
-		height: clamp(14rem, 38vh, 20rem);
+		height: clamp(14rem, 42vh, 21rem);
 		max-width: 100%;
-		border: 1px solid var(--border-dim);
-		border-radius: var(--radius-md);
-		background: color-mix(in srgb, var(--bg-raised) 82%, transparent);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-sm);
+		background: var(--paper-2);
+		box-shadow: var(--shadow-card);
 		overflow: hidden;
 		display: grid;
 		place-items: center;
 	}
 
 	.card-preview--wide {
-		height: clamp(12rem, 32vh, 17rem);
+		height: clamp(12rem, 34vh, 18rem);
 	}
 
 	.card-preview img {
@@ -1049,8 +1472,11 @@
 
 	.card-preview-loading {
 		padding: 1rem;
-		font-size: 0.875rem;
-		font-weight: 600;
+		font-family: var(--mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 		color: var(--muted);
 		animation: pulse-soft 1.4s ease-in-out infinite;
 	}
@@ -1064,22 +1490,36 @@
 		flex: 1;
 		min-height: 2.75rem;
 		padding: 0.5rem 0.625rem;
-		border-radius: var(--radius-md);
-		border: 1.5px solid var(--border-dim);
-		background: var(--bg-raised);
-		color: var(--fg);
-		font-size: 0.8125rem;
+		border: 1px solid var(--ink);
+		border-radius: var(--radius-sm);
+		background: var(--receipt);
+		color: var(--ink);
+		font-family: var(--mono);
+		font-size: 0.6875rem;
 		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		cursor: pointer;
+		box-shadow: var(--shadow-hard) var(--rule-2);
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease;
+	}
+
+	.format:hover {
+		transform: translate(-1px, -1px);
+		box-shadow: 5px 5px 0 var(--rule-2);
 	}
 
 	.format.active {
-		border-color: var(--accent-bright);
-		background: color-mix(in srgb, var(--accent) 28%, var(--bg-raised));
+		background: var(--ink);
+		color: var(--receipt);
+		box-shadow: var(--shadow-hard) var(--accent);
 	}
 
 	.card-error {
-		font-size: 0.875rem;
+		font-family: var(--mono);
+		font-size: 0.8125rem;
 		color: var(--warn);
 	}
 
@@ -1088,20 +1528,121 @@
 		border: 0;
 		background: none;
 		color: var(--muted);
-		font: inherit;
-		font-size: 0.875rem;
+		font-family: var(--mono);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
 		cursor: pointer;
 		text-decoration: underline;
 		text-underline-offset: 0.2em;
 		min-height: 2.75rem;
 	}
 
+	.resync:hover {
+		color: var(--stamp-ink);
+	}
+
+	/* ============================================================
+	   SHARE-CARD MODAL — a focused "printout" dialog.
+	   ============================================================ */
+	.share-modal {
+		width: min(92vw, 25rem);
+		max-width: 92vw;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--ink);
+		margin: auto;
+	}
+
+	.share-modal::backdrop {
+		background: rgba(27, 23, 18, 0.55);
+		backdrop-filter: blur(2px);
+	}
+
+	.share-modal__sheet {
+		background: var(--receipt);
+		border: 1.5px solid var(--ink);
+		border-radius: var(--radius-lg);
+		box-shadow: 8px 10px 0 rgba(27, 23, 18, 0.18);
+		overflow: hidden;
+	}
+
+	.share-modal[open] .share-modal__sheet {
+		animation: modal-in 220ms ease both;
+	}
+
+	@keyframes modal-in {
+		from {
+			opacity: 0;
+			transform: translateY(12px) scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.share-modal__bar {
+		padding: 0.5rem 0.6rem 0.5rem 0.9rem;
+		background: var(--ink);
+	}
+
+	.share-modal__bar .sb-rec {
+		color: var(--paper);
+	}
+
+	.share-modal__bar .sb-title {
+		color: var(--receipt);
+	}
+
+	.sb-close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		flex-shrink: 0;
+		border: 0;
+		background: none;
+		color: var(--receipt);
+		font-family: var(--mono);
+		font-size: 0.9rem;
+		cursor: pointer;
+		border-radius: var(--radius-sm);
+	}
+
+	.sb-close:hover {
+		background: rgba(251, 249, 243, 0.16);
+	}
+
+	.share-modal__body {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.875rem;
+		padding: 1.125rem 1.125rem 1.375rem;
+		text-align: center;
+	}
+
+	.share-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		width: 100%;
+	}
+
+	/* ============================================================
+	   DECK NAV — perforated footer with mono controls.
+	   ============================================================ */
 	.deck-nav {
 		position: sticky;
 		bottom: 0;
 		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-		background: color-mix(in srgb, var(--bg) 82%, transparent);
+		background: color-mix(in srgb, var(--paper) 88%, transparent);
 		backdrop-filter: blur(8px);
+		border-top: 2px dashed var(--rule);
 	}
 
 	.deck-nav-inner {
@@ -1109,36 +1650,55 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		padding-block: 0.625rem;
+		padding-block: 0.75rem;
 	}
 
 	.nav-btn {
 		min-height: 2.75rem;
-		padding: 0.5rem 1rem;
+		padding: 0.5rem 1.125rem;
+		border: 1px solid var(--ink);
 		border-radius: var(--radius-md);
-		border: 1.5px solid var(--border-dim);
-		background: var(--bg-raised);
-		color: var(--fg);
-		font: inherit;
+		background: var(--receipt);
+		color: var(--ink);
+		font-family: var(--mono);
 		font-weight: 700;
-		font-size: 0.9375rem;
+		font-size: 0.8125rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		cursor: pointer;
+		box-shadow: var(--shadow-hard) var(--rule-2);
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease;
+	}
+
+	.nav-btn:not(:disabled):hover {
+		transform: translate(-1px, -1px);
+		box-shadow: 5px 5px 0 var(--rule-2);
 	}
 
 	.nav-btn--primary {
-		background: var(--accent);
-		border-color: transparent;
+		background: var(--ink);
+		color: var(--receipt);
+		box-shadow: var(--shadow-hard) var(--accent);
+	}
+
+	.nav-btn--primary:not(:disabled):hover {
+		box-shadow: 5px 5px 0 var(--accent);
 	}
 
 	.nav-btn:disabled {
-		opacity: 0.35;
+		opacity: 0.4;
 		cursor: default;
+		box-shadow: var(--shadow-hard) var(--rule-2);
 	}
 
 	.counter {
+		font-family: var(--mono);
 		font-variant-numeric: tabular-nums;
 		font-weight: 700;
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
+		letter-spacing: 0.08em;
 		color: var(--muted);
 	}
 </style>

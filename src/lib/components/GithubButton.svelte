@@ -2,7 +2,7 @@
 	let { label = 'Continue with GitHub' }: { label?: string } = $props();
 </script>
 
-<a class="btn github" href="/auth/login" data-sveltekit-preload-data="off">
+<a class="btn" href="/auth/login" data-sveltekit-preload-data="off">
 	<svg
 		width="24"
 		height="24"
@@ -22,12 +22,10 @@
 </a>
 
 <style>
-	.github {
-		background: var(--fg);
-		color: var(--bg);
-	}
-
-	.github:hover {
-		background: #e2e8f0;
+	/* GitHub sign-in uses the shared primary .btn identity from app.css:
+	   ink fill with a vermilion stamp-shadow. No local overrides needed —
+	   the GitHub mark inherits currentColor (--receipt) against the ink. */
+	.btn :global(svg) {
+		flex: 0 0 auto;
 	}
 </style>

@@ -10,7 +10,7 @@ const DEFAULT_CARD: OgCard = {
 	title: 'What kind of developer are you, really?',
 	subtitle: 'Your last 12 months on GitHub, turned into an uncomfortably accurate story.',
 	handle: 'wrapped for developers',
-	gradient: ['#7C3AED', '#DB2777']
+	gradient: ['#B23016', '#8F2410']
 };
 
 /**
