@@ -406,8 +406,8 @@
 	{:else if metrics}
 		<header class="deck-top">
 			<div class="deck-top-inner shell">
-				<div class="statusbar" aria-hidden="true">
-					<span class="sb-rec">REC ●</span>
+				<div class="statusbar">
+					<a class="sb-home" href="/">← Home</a>
 					<span class="sb-title">{slideTitles[slide]}</span>
 					<span class="sb-folio"
 						>SLIDE {(slide + 1).toString().padStart(2, '0')}/{TOTAL_SLIDES}</span
@@ -983,6 +983,20 @@
 		white-space: nowrap;
 	}
 
+	.sb-home {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5ch;
+		min-height: 2.75rem;
+		color: var(--muted);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.sb-home:hover {
+		color: var(--ink);
+	}
+
 	.sb-title {
 		flex: 1;
 		text-align: center;
@@ -1000,6 +1014,9 @@
 		display: flex;
 		align-items: center;
 		gap: 0.875rem;
+		/* Match the Skip button's tap-target height so the header doesn't
+		   shrink on the final slide where Skip is hidden. */
+		min-height: 2.75rem;
 	}
 
 	.segments {
@@ -1021,6 +1038,8 @@
 	}
 
 	.skip {
+		display: inline-flex;
+		align-items: center;
 		border: 0;
 		background: none;
 		color: var(--muted);
