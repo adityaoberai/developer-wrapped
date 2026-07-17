@@ -306,8 +306,7 @@
 			// full "you said vs. GitHub says" confrontation when available.
 			quizArchetypeName: quizArchetype?.name,
 			quizArchetypeEmoji: quizArchetype?.emoji,
-			gradient: githubArchetype.gradient,
-			brandUrl: page.url.host
+			gradient: githubArchetype.gradient
 		};
 	}
 

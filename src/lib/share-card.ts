@@ -39,8 +39,6 @@ export interface WrappedCardInput {
 	quizArchetypeName?: string;
 	quizArchetypeEmoji?: string;
 	gradient: [string, string];
-	/** Clear brand URL printed on every card, e.g. "wrapped.dev.example". */
-	brandUrl: string;
 }
 
 /* ============================================================
@@ -199,14 +197,14 @@ export async function renderWrappedCard(
 		y += rowH;
 	}
 
-	// Archetype line(s) — story/portrait have room. With a quiz result the card
-	// carries the full "You said vs. GitHub says" confrontation, the struck-out
-	// self-assessment in pen blue and the verdict stamped in accent ink.
-	if (input.archetypeName && !compact) {
-		y += 12;
+	// Archetype verdict — shown on EVERY format (the resulting archetype is the
+	// point of the card). Story/portrait also carry the struck-out "You said"
+	// self-assessment in pen blue above the accent-ink verdict.
+	if (input.archetypeName) {
+		y += compact ? 20 : 12;
 		ctx.textAlign = 'center';
-		ctx.font = `700 32px ${monoStack()}`;
-		if (input.quizArchetypeName) {
+		ctx.font = `700 ${compact ? 28 : 32}px ${monoStack()}`;
+		if (input.quizArchetypeName && !compact) {
 			const said = `${input.quizArchetypeEmoji ?? ''} You said: ${input.quizArchetypeName}`.trim();
 			ctx.fillStyle = PEN;
 			ctx.fillText(said, midX, y, contentW);
@@ -230,12 +228,9 @@ export async function renderWrappedCard(
 		);
 	}
 
-	// Brand URL anchored to the bottom of every format.
-	const brandY = h - (compact ? 96 : 120);
-
-	// A CSS-barcode strip — room only in the tall story format.
+	// A CSS-barcode strip anchors the bottom of the tall story format.
 	if (format === 'story') {
-		const barTop = brandY - 300;
+		const barTop = h - 196;
 		ctx.textAlign = 'left';
 		ctx.fillStyle = MUTED;
 		ctx.font = `600 20px ${monoStack()}`;
@@ -245,12 +240,6 @@ export async function renderWrappedCard(
 		ctx.textAlign = 'left';
 		drawBarcode(ctx, contentLeft, barTop + 16, contentW, 66);
 	}
-
-	// Brand URL — the card's single, clean attribution line.
-	ctx.textAlign = 'center';
-	ctx.fillStyle = INK;
-	ctx.font = `700 ${compact ? 26 : 30}px ${monoStack()}`;
-	drawTracked(ctx, input.brandUrl, midX, brandY, 2, 'center');
 
 	return new Promise((resolve, reject) => {
 		canvas.toBlob(
