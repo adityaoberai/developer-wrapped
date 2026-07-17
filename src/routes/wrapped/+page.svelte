@@ -623,6 +623,9 @@
 									<span class="val">{verdict.reason.source}</span>
 								</div>
 							{/if}
+							<a class="archetypes-link" href="/archetypes" target="_blank" rel="noopener">
+								Browse all archetypes →
+							</a>
 						{:else}
 							<h1 id="slide-heading" tabindex="-1">One side of this story is missing</h1>
 							<p class="hero-line">
@@ -1310,6 +1313,20 @@
 	.quiz-cta {
 		margin-top: 0.5rem;
 		max-width: 20rem;
+	}
+
+	.archetypes-link {
+		margin-top: 0.75rem;
+		font-family: var(--mono);
+		font-size: 0.8125rem;
+		letter-spacing: 0.04em;
+		color: var(--muted);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.archetypes-link:hover {
+		color: var(--ink, inherit);
 	}
 
 	/* ============================================================
