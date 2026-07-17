@@ -1,16 +1,23 @@
 import { createAdminClient, getRowOrNull, requireAuth, TABLES } from '$lib/server/appwrite';
-import { resolveGithubAccess } from '$lib/server/github';
+import { hasGithubToken, resolveGithubAccess } from '$lib/server/github';
 import { fetchGithubStats, GithubSyncError } from '$lib/server/wrapped/github';
 import { toReportDto, upsertReport } from '$lib/server/wrapped/reports';
 import { computeMetrics, rollingYearPeriod } from '$lib/wrapped/metrics';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-/** Load the caller's private Wrapped report (null when never synced). */
+/**
+ * Load the caller's private Wrapped report (null when never synced). While the
+ * report is missing, `canSync` tells the poller whether the background sync
+ * can succeed at all — false means no GitHub token is on file, so waiting for
+ * the login-triggered function is pointless and the reconnect prompt should
+ * show immediately.
+ */
 export const GET: RequestHandler = async ({ locals }) => {
-	const { user, tablesDB } = await requireAuth(locals);
+	const { user, account, tablesDB } = await requireAuth(locals);
 	const row = await getRowOrNull(tablesDB, TABLES.wrappedReports, user.$id);
-	return json({ report: row ? toReportDto(row) : null });
+	if (row) return json({ report: toReportDto(row) });
+	return json({ report: null, canSync: await hasGithubToken(account) });
 };
 
 /**

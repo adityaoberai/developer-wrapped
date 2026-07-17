@@ -78,6 +78,20 @@ export async function resolveGithubAccess(
 	return { identity: fallback, accessToken: null };
 }
 
+/** Cheap token-presence check (no GitHub round-trip) for sync-status polling. */
+export async function hasGithubToken(account: Account): Promise<boolean> {
+	try {
+		const { identities } = await account.listIdentities({
+			queries: [Query.equal('provider', 'github'), Query.orderDesc('$updatedAt'), Query.limit(1)]
+		});
+		return Boolean(identities[0]?.providerAccessToken);
+	} catch {
+		// Assume syncable on a transient Appwrite failure; the inline sync
+		// fallback is the authority and reports the real error.
+		return true;
+	}
+}
+
 /** Identity-only variant for callers that never touch the GitHub API. */
 export async function resolveGithubIdentity(
 	account: Account,

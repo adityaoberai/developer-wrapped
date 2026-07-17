@@ -62,7 +62,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	if (archetypeId !== scored.primary || secondaryId !== scored.secondary) {
-		error(409, 'Submitted result does not match the saved answers. Reload the reveal.');
+		error(409, 'Submitted result does not match the saved answers. Retry from the quiz.');
 	}
 	const scoresJson = JSON.stringify(scored.scores);
 

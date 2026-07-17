@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Seo from '$lib/components/Seo.svelte';
+	import { computeScores, rankArchetypes } from '$lib/scoring';
 	import { parseQuestion, type QuizOption } from '$lib/types';
 	import { tick } from 'svelte';
 	import type { PageProps } from './$types';
@@ -23,13 +24,14 @@
 	let index = $state(firstUnanswered === -1 ? 0 : firstUnanswered);
 	let saveError = $state(false);
 	let finishing = $state(false);
+	let finishError = $state(false);
 	let advanceTimer: ReturnType<typeof setTimeout> | undefined;
 	// Monotonic token per question so a stale save failure can never clobber a
 	// newer selection the user made in the meantime.
 	let saveSeq = 0;
 	const latestSave: Record<string, number> = {};
-	// Every in-flight (or settled) save, keyed by question. Navigating to the
-	// reveal waits for ALL of them, not just the final question's save, so a
+	// Every in-flight (or settled) save, keyed by question. Submitting the
+	// result waits for ALL of them, not just the final question's save, so a
 	// slow earlier save can never be lost behind the redirect.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping only, never rendered
 	const pendingSaves = new Map<string, Promise<boolean>>();
@@ -49,6 +51,7 @@
 		const previous = selections[q.id];
 		selections[q.id] = option.id;
 		saveError = false;
+		finishError = false;
 		finishing = false;
 		clearTimeout(advanceTimer);
 		const token = ++saveSeq;
@@ -86,6 +89,36 @@
 		advanceTimer = setTimeout(() => advance(), 450);
 	}
 
+	function randomSlug(): string {
+		const bytes = crypto.getRandomValues(new Uint8Array(8));
+		return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+	}
+
+	/**
+	 * Persist the quiz result; the server re-scores the saved answers and 409s
+	 * on drift, so the submitted archetypes must come from the same selections
+	 * the saves just wrote.
+	 */
+	async function saveResult(): Promise<void> {
+		const scores = computeScores(questions, new Map(Object.entries(selections)));
+		const { primary, secondary } = rankArchetypes(scores);
+		const res = await fetch('/api/results', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: data.userId,
+				archetype_id: primary,
+				secondary_archetype_id: secondary,
+				scores_json: JSON.stringify(scores),
+				share_slug: randomSlug(),
+				// Private by default — publishing is an explicit step on the Wrapped page.
+				is_public: false,
+				completed_at: new Date().toISOString()
+			})
+		});
+		if (!res.ok) throw new Error(`result save failed (${res.status})`);
+	}
+
 	async function advance() {
 		if (index < total - 1) {
 			index += 1;
@@ -96,10 +129,11 @@
 			index = unanswered;
 			return;
 		}
-		// Final question: the reveal's server guard re-reads saved answers, so
-		// every save must have landed before navigating. Re-answering during the
+		// Final question: the result is scored from saved answers server-side, so
+		// every save must have landed before submitting. Re-answering during the
 		// wait replaces map entries, so loop until a full snapshot settles clean.
 		finishing = true;
+		finishError = false;
 		for (;;) {
 			const snapshot = [...pendingSaves.values()];
 			const results = await Promise.all(snapshot);
@@ -115,8 +149,17 @@
 			finishing = false;
 			return;
 		}
-		finishing = false;
-		await goto('/reveal');
+		// Straight to the consolidated Wrapped: GitHub data has been assimilating
+		// in the background since sign-in, and the deck folds this result into
+		// its "you said vs. GitHub says" confrontation.
+		try {
+			await saveResult();
+		} catch {
+			finishing = false;
+			finishError = true;
+			return;
+		}
+		await goto('/wrapped');
 	}
 
 	function back() {
@@ -218,8 +261,15 @@
 			</p>
 		{/if}
 
+		{#if finishError}
+			<div class="save-error" role="alert">
+				<p>Your answers are safe — we just couldn't seal the verdict. Try again.</p>
+				<button class="retry" type="button" onclick={advance}>Retry</button>
+			</div>
+		{/if}
+
 		{#if finishing}
-			<p class="finishing" role="status">Locking in your answers…</p>
+			<p class="finishing" role="status">Locking in your verdict…</p>
 		{/if}
 
 		<p class="sr-only" aria-live="polite">{answeredCount} of {total} questions answered</p>
@@ -388,6 +438,19 @@
 		border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
 		color: var(--fg);
 		font-size: 0.9375rem;
+	}
+
+	.retry {
+		margin-top: 0.5rem;
+		min-height: 2.75rem;
+		padding: 0.5rem 1.25rem;
+		border-radius: var(--radius-md);
+		border: 1.5px solid var(--border-dim);
+		background: var(--bg-raised);
+		color: var(--fg);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
 	}
 
 	.finishing {

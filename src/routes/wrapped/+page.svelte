@@ -68,8 +68,58 @@
 		}
 	}
 
+	// Signing in triggers the github-wrapped Appwrite Function, so a missing
+	// report usually means that background sync is still mid-flight. Poll for
+	// its result briefly before falling back to collecting inline. The signal
+	// ties the loop to the component: navigating away mid-poll must not leave
+	// a stray inline sync running.
+	const POLL_INTERVAL_MS = 2000;
+	const POLL_ATTEMPTS = 5;
+
+	async function waitForBackgroundSync(signal: AbortSignal) {
+		syncing = true;
+		syncError = '';
+		needsReconnect = false;
+		for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+			try {
+				const res = await fetch('/api/wrapped', { signal });
+				if (res.ok) {
+					const payload = (await res.json()) as {
+						report: WrappedReportDto | null;
+						canSync?: boolean;
+					};
+					if (payload.report) {
+						report = payload.report;
+						slide = 0;
+						syncing = false;
+						return;
+					}
+					if (payload.canSync === false) {
+						// No GitHub token on file — the background sync can never land,
+						// so show the reconnect prompt instead of polling out the clock.
+						needsReconnect = true;
+						syncError = 'GitHub authorization is missing or expired — sign in with GitHub again.';
+						syncing = false;
+						return;
+					}
+				}
+			} catch {
+				// transient (or aborted) — the checks below decide what happens next
+			}
+			if (signal.aborted) return;
+			if (attempt < POLL_ATTEMPTS - 1) {
+				await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+				if (signal.aborted) return;
+			}
+		}
+		await sync();
+	}
+
 	onMount(() => {
-		if (!report) void sync();
+		if (report) return;
+		const controller = new AbortController();
+		void waitForBackgroundSync(controller.signal);
+		return () => controller.abort();
 	});
 
 	function next() {

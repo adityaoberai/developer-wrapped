@@ -1,0 +1,16 @@
+{
+  "name": "github-wrapped",
+  "version": "1.0.0",
+  "description": "Background GitHub contribution assimilation for Developer Wrapped",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "node-appwrite": "^27.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

@@ -33,25 +33,23 @@
 		<p class="eyebrow">Well, well, well</p>
 		<h1>Hey, {data.profile.display_name || data.profile.github_username || 'developer'} 👋</h1>
 		<p class="muted lead">
-			Your last 12 months on GitHub are about to testify. We collect aggregate contribution counts
-			for an exact period — never your code — and everything stays private until you choose to
-			publish it. The quiz is optional, judgmental, and two minutes long.
+			Your last 12 months on GitHub started testifying the moment you signed in — aggregate
+			contribution counts for an exact period, never your code, all private until you choose to
+			publish. The quiz adds an optional "you said vs. GitHub says" confrontation. Two minutes, only
+			slightly judgmental.
 		</p>
 
 		<div class="actions">
-			<a class="btn" href="/wrapped">See my Wrapped</a>
 			{#if resuming}
-				<a class="btn btn--subtle" href="/quiz"
+				<a class="btn" href="/quiz"
 					>Resume quiz ({data.answeredCount}/{data.totalQuestions} answered)</a
 				>
 			{:else}
-				<a class="btn btn--subtle" href="/quiz"
-					>{data.currentResult ? 'Retake the quiz' : 'Take the quiz'}</a
-				>
+				<a class="btn" href="/quiz">{data.currentResult ? 'Retake the quiz' : 'Take the quiz'}</a>
 			{/if}
-			{#if data.currentResult}
-				<a class="btn btn--ghost" href="/r/{data.currentResult.share_slug}">See my quiz result</a>
-			{/if}
+			<a class="btn btn--subtle" href="/wrapped"
+				>{data.currentResult ? 'See my Wrapped' : 'Skip to my Wrapped'}</a
+			>
 		</div>
 
 		<button class="signout" type="button" onclick={signOut}> Not you? Sign out </button>

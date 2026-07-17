@@ -45,6 +45,27 @@
 			}
 		}
 	},
+	"functions": [
+		{
+			"$id": "github-wrapped",
+			"name": "github-wrapped",
+			"runtime": "node-25",
+			"buildSpecification": "s-2vcpu-2gb",
+			"runtimeSpecification": "s-2vcpu-2gb",
+			"execute": ["users"],
+			"events": ["users.*.sessions.*.create"],
+			"scopes": ["users.read", "rows.read", "rows.write"],
+			"schedule": "",
+			"timeout": 30,
+			"enabled": true,
+			"logging": true,
+			"entrypoint": "src/main.js",
+			"commands": "npm install",
+			"ignore": ["node_modules", ".npm"],
+			"deploymentRetention": 0,
+			"path": "functions/github-wrapped"
+		}
+	],
 	"sites": [
 		{
 			"$id": "developer-wrapped",
