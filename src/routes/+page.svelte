@@ -131,7 +131,7 @@
 			<hr class="perf" />
 
 			<header class="hero">
-				<p class="eyebrow">Developer Wrapped</p>
+				<p class="eyebrow">Developer Personality</p>
 				<h1>
 					What kind of developer are you, <em>really?</em><span class="caret" aria-hidden="true"
 					></span>
