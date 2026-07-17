@@ -57,6 +57,7 @@
 	}
 
 	async function downloadCard() {
+		console.log('[card-debug] downloadCard() called');
 		cardBusy = true;
 		cardError = false;
 		actionStatus = 'Rendering the share card.';
@@ -68,6 +69,7 @@
 				githubUsername: data.result.github_username,
 				avatarUrl: data.result.avatar_url
 			});
+			console.log('[card-debug] blob rendered:', blob.size, 'bytes, type:', blob.type);
 
 			const link = document.createElement('a');
 			link.href = URL.createObjectURL(blob);
@@ -75,16 +77,29 @@
 			link.click();
 			URL.revokeObjectURL(link.href);
 
+			console.log('[card-debug] data.isOwner =', data.isOwner);
 			if (data.isOwner) {
 				// Best effort: also host the card in Appwrite Storage for sharing.
-				await fetch('/api/card', {
-					method: 'POST',
-					headers: { 'content-type': 'image/png' },
-					body: blob
-				}).catch(() => {});
+				try {
+					console.log('[card-debug] POSTing to /api/card…');
+					const res = await fetch('/api/card', {
+						method: 'POST',
+						headers: { 'content-type': 'image/png' },
+						body: blob
+					});
+					console.log('[card-debug] /api/card responded:', res.status, res.ok);
+					if (!res.ok) {
+						console.error('Share card upload failed:', res.status, await res.text());
+					} else {
+						console.log('[card-debug] upload OK:', await res.text());
+					}
+				} catch (cause) {
+					console.error('Share card upload failed:', cause);
+				}
 			}
 			actionStatus = 'Share card downloaded.';
-		} catch {
+		} catch (cause) {
+			console.error('[card-debug] downloadCard threw before upload:', cause);
 			cardError = true;
 			actionStatus = '';
 		} finally {

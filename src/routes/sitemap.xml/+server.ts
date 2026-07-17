@@ -16,43 +16,22 @@ function xml(value: string): string {
 	return value.replace(/[&<>"']/g, (character) => entities[character]);
 }
 
-/** Public static routes plus the most recent published Wrapped and result pages. */
+/** Public static routes plus the most recent published Wrapped pages. */
 export const GET: RequestHandler = async ({ url }) => {
 	const entries: SitemapEntry[] = ['/', '/archetypes', '/feed'].map((path) => ({ path }));
 
 	try {
 		const { tablesDB } = createGuestClient();
-		const [results, shares] = await Promise.all([
-			tablesDB.listRows({
-				databaseId: DB_ID,
-				tableId: TABLES.results,
-				queries: [
-					Query.equal('is_public', true),
-					Query.orderDesc('completed_at'),
-					Query.limit(100),
-					Query.select(['share_slug', 'completed_at'])
-				]
-			}),
-			tablesDB.listRows({
-				databaseId: DB_ID,
-				tableId: TABLES.publicShares,
-				queries: [
-					Query.orderDesc('published_at'),
-					Query.limit(100),
-					Query.select(['share_slug', 'published_at'])
-				]
-			})
-		]);
+		const shares = await tablesDB.listRows({
+			databaseId: DB_ID,
+			tableId: TABLES.publicShares,
+			queries: [
+				Query.orderDesc('published_at'),
+				Query.limit(100),
+				Query.select(['share_slug', 'published_at'])
+			]
+		});
 
-		for (const row of results.rows) {
-			const slug = row.share_slug;
-			if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug)) continue;
-			const completedAt = typeof row.completed_at === 'string' ? Date.parse(row.completed_at) : NaN;
-			entries.push({
-				path: `/r/${encodeURIComponent(slug)}`,
-				lastmod: Number.isNaN(completedAt) ? undefined : new Date(completedAt).toISOString()
-			});
-		}
 		for (const row of shares.rows) {
 			const slug = row.share_slug;
 			if (typeof slug !== 'string' || !SLUG_PATTERN.test(slug)) continue;

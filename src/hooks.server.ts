@@ -50,11 +50,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			return cached;
 		}
 		try {
-			const { client, account, tablesDB, storage } = createSessionClient(session);
+			const { client, account, tablesDB } = createSessionClient(session);
 			const userAgent = event.request.headers.get('user-agent');
 			if (userAgent) client.setForwardedUserAgent(userAgent.slice(0, 512));
 			const user = await account.get();
-			cached = { user, account, tablesDB, storage };
+			cached = { user, account, tablesDB };
 		} catch (error) {
 			if (error instanceof AppwriteException && error.code === 401) {
 				event.cookies.delete(SESSION_COOKIE, { path: '/' });

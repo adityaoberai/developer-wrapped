@@ -1,7 +1,7 @@
 import { PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
-import { Account, AppwriteException, Client, type Models, Storage, TablesDB } from 'node-appwrite';
+import { Account, AppwriteException, Client, type Models, TablesDB } from 'node-appwrite';
 
 export const DB_ID = 'wrapped';
 export const TABLES = {
@@ -12,7 +12,6 @@ export const TABLES = {
 	wrappedReports: 'wrapped_reports',
 	publicShares: 'public_shares'
 } as const;
-export const BUCKET_ID = 'share-cards';
 export const SESSION_COOKIE = 'dw-session';
 
 function baseClient(): Client {
@@ -53,8 +52,7 @@ export function createSessionClient(session: string) {
 	return {
 		client,
 		account: new Account(client),
-		tablesDB: new TablesDB(client),
-		storage: new Storage(client)
+		tablesDB: new TablesDB(client)
 	};
 }
 

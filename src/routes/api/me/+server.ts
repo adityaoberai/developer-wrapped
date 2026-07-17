@@ -23,13 +23,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 					quiz_completed: Boolean(profile.quiz_completed)
 				}
 			: null,
-		currentResult: result
-			? {
-					share_slug: result.share_slug as string,
-					archetype_id: result.archetype_id as ArchetypeId,
-					is_public: Boolean(result.is_public)
-				}
-			: null
+		currentResult: result ? { archetype_id: result.archetype_id as ArchetypeId } : null
 	};
 
 	return json(body);

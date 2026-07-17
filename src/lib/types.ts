@@ -70,26 +70,13 @@ export interface ResultDto {
 	archetype_id: ArchetypeId;
 	secondary_archetype_id: ArchetypeId;
 	is_public: boolean;
-	card_file_id: string | null;
-	completed_at: string;
-}
-
-/** Shape returned by GET /api/results/{share_slug} — public fields only. */
-export interface PublicResult {
-	share_slug: string;
-	github_username: string;
-	display_name: string;
-	avatar_url: string;
-	archetype_id: ArchetypeId;
-	secondary_archetype_id: ArchetypeId;
-	is_public: boolean;
 	completed_at: string;
 }
 
 export interface MeResponse {
 	user: { id: string; name: string; email: string };
 	profile: Omit<ProfileDto, 'id' | 'user_id'> | null;
-	currentResult: Pick<ResultDto, 'share_slug' | 'archetype_id' | 'is_public'> | null;
+	currentResult: Pick<ResultDto, 'archetype_id'> | null;
 }
 
 /** One published Wrapped edition on the live feed — sanitized public_shares data only. */

@@ -1,9 +1,8 @@
 import { getArchetype } from '$lib/content/archetypes';
-import { createGuestClient, DB_ID, getRowOrNull, TABLES } from '$lib/server/appwrite';
+import { createGuestClient, getRowOrNull, TABLES } from '$lib/server/appwrite';
 import { renderOgImage, type OgCard } from '$lib/server/og/render';
 import { SLUG_PATTERN } from '$lib/server/validate';
 import type { SharedMetrics } from '$lib/wrapped/types';
-import { Query } from 'node-appwrite';
 import type { RequestHandler } from './$types';
 
 const DEFAULT_CARD: OgCard = {
@@ -14,8 +13,8 @@ const DEFAULT_CARD: OgCard = {
 };
 
 /**
- * Dynamic 1200x630 Open Graph image; `?slug=` renders a quiz-result card and
- * `?wrapped=` renders a published Wrapped card (sanitized public data only).
+ * Dynamic 1200x630 Open Graph image; `?wrapped=` renders a published Wrapped
+ * card (sanitized public data only), otherwise the default card.
  */
 export const GET: RequestHandler = async ({ url }) => {
 	let card = DEFAULT_CARD;
@@ -35,32 +34,6 @@ export const GET: RequestHandler = async ({ url }) => {
 					subtitle: `${metrics.activeDays.toLocaleString('en-US')} active days · ${row.period_start} → ${row.period_end}`,
 					handle: row.github_username ? `@${row.github_username}` : 'developer wrapped',
 					gradient: archetype?.gradient ?? DEFAULT_CARD.gradient
-				};
-			}
-		} catch {
-			// fall back to the default card
-		}
-	}
-
-	const slug = url.searchParams.get('slug');
-	if (slug && card === DEFAULT_CARD) {
-		try {
-			const { tablesDB } = createGuestClient();
-			const { rows } = await tablesDB.listRows({
-				databaseId: DB_ID,
-				tableId: TABLES.results,
-				queries: [Query.equal('share_slug', slug), Query.equal('is_public', true), Query.limit(1)]
-			});
-			const row = rows[0];
-			if (row) {
-				const archetype = getArchetype(row.archetype_id as string);
-				const name =
-					(row.display_name as string) || (row.github_username as string) || 'A developer';
-				card = {
-					title: `${name} is ${archetype.name}`,
-					subtitle: `“${archetype.tagline}”`,
-					handle: row.github_username ? `@${row.github_username}` : 'developer wrapped',
-					gradient: archetype.gradient
 				};
 			}
 		} catch {

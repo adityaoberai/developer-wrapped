@@ -1,11 +1,4 @@
-import {
-	BUCKET_ID,
-	DB_ID,
-	getRowOrNull,
-	isAppwriteNotFound,
-	requireAuth,
-	TABLES
-} from '$lib/server/appwrite';
+import { DB_ID, getRowOrNull, requireAuth, TABLES } from '$lib/server/appwrite';
 import { toResultDto } from '$lib/server/dto';
 import { resolveGithubIdentity } from '$lib/server/github';
 import { upsertProfile } from '$lib/server/profile';
@@ -29,7 +22,7 @@ import type { RequestHandler } from './$types';
  * keep the original share slug so existing share links never break.
  */
 export const POST: RequestHandler = async ({ locals, request }) => {
-	const { user, account, tablesDB, storage } = await requireAuth(locals);
+	const { user, account, tablesDB } = await requireAuth(locals);
 
 	const body = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>;
 	if (body.user_id && body.user_id !== user.$id) {
@@ -83,19 +76,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	// results can't impersonate another GitHub user.
 	const identity = await resolveGithubIdentity(account, user);
 
-	// A previously generated card represents the old result. Remove it before
-	// replacing the row so stale imagery cannot outlive a private retake.
-	if (existing) {
-		try {
-			await storage.deleteFile({
-				bucketId: BUCKET_ID,
-				fileId: user.$id
-			});
-		} catch (cause) {
-			if (!isAppwriteNotFound(cause)) throw cause;
-		}
-	}
-
 	const row = await tablesDB.upsertRow({
 		databaseId: DB_ID,
 		tableId: TABLES.results,
@@ -110,7 +90,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			scores_json: scoresJson,
 			share_slug: shareSlug,
 			is_public: isPublic,
-			card_file_id: '',
 			completed_at: completedAt
 		},
 		permissions: [

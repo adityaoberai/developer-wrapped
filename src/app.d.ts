@@ -1,10 +1,9 @@
-import type { Account, Models, Storage, TablesDB } from 'node-appwrite';
+import type { Account, Models, TablesDB } from 'node-appwrite';
 
 type AuthContext = {
 	user: Models.User<Models.Preferences>;
 	account: Account;
 	tablesDB: TablesDB;
-	storage: Storage;
 };
 
 declare global {

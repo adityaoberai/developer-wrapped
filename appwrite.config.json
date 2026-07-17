@@ -337,15 +337,6 @@
                     "default": false
                 },
                 {
-                    "key": "card_file_id",
-                    "type": "varchar",
-                    "required": false,
-                    "array": false,
-                    "size": 64,
-                    "default": null,
-                    "encrypt": false
-                },
-                {
                     "key": "completed_at",
                     "type": "datetime",
                     "required": true,
@@ -772,22 +763,5 @@
             ]
         }
     ],
-    "buckets": [
-        {
-            "$id": "share-cards",
-            "$permissions": [
-                "create(\"users\")"
-            ],
-            "fileSecurity": true,
-            "name": "Share Cards",
-            "enabled": true,
-            "maximumFileSize": 5242880,
-            "allowedFileExtensions": [
-                "png"
-            ],
-            "compression": "none",
-            "encryption": false,
-            "antivirus": false
-        }
-    ]
+    "buckets": []
 }
