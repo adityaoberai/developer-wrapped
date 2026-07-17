@@ -55,7 +55,6 @@ const INK = '#1b1712';
 const MUTED = '#5b5344';
 const PEN = '#274b7a';
 const RULE = 'rgba(27, 23, 18, 0.30)';
-const BAND = 'rgba(27, 23, 18, 0.055)';
 const CARD_SHADOW = 'rgba(27, 23, 18, 0.12)';
 
 /**
@@ -131,10 +130,10 @@ export async function renderWrappedCard(
 	// Rotated "CERTIFIED" rubber stamp in the top-right corner.
 	drawStamp(ctx, cardX + cardW - 132, cardY + (compact ? 108 : 122), -8, accentInk);
 
-	// Avatar (skipped in square to keep the metric dominant).
-	if (!compact) {
+	// Avatar — present in every format; a face is what makes the card shareable.
+	{
 		const avatar = input.avatarUrl ? await loadImage(input.avatarUrl) : null;
-		const r = format === 'story' ? 108 : 84;
+		const r = format === 'story' ? 108 : compact ? 72 : 84;
 		if (avatar) {
 			const cy = y + r;
 			ctx.save();
@@ -158,7 +157,7 @@ export async function renderWrappedCard(
 			ctx.arc(midX, cy, r + 10, 0, Math.PI * 2);
 			ctx.stroke();
 			ctx.restore();
-			y += r * 2 + (format === 'story' ? 84 : 64);
+			y += r * 2 + (format === 'story' ? 84 : compact ? 48 : 64);
 		}
 	}
 
@@ -172,17 +171,12 @@ export async function renderWrappedCard(
 		ctx.font = `600 ${compact ? 28 : 32}px ${monoStack()}`;
 		ctx.fillText(`@${input.githubUsername}`, midX, y, contentW);
 	}
-	y += format === 'story' ? 170 : compact ? 110 : 130;
+	y += format === 'story' ? 170 : compact ? 118 : 130;
 
-	// Headline metric — the one distinctive number, solid accent ink in a
-	// bordered "bignum" frame. No gradients: this is a paper world.
+	// Headline metric — the one distinctive number, solid accent ink. No frame,
+	// no gradient: this is a paper world and the number stands on its own.
 	const valFont = format === 'story' ? 200 : compact ? 140 : 172;
-	const frameTop = y - valFont * 0.72;
 	const labelY = y + (compact ? 62 : 76);
-	const frameBottom = labelY + (compact ? 22 : 26);
-	ctx.lineWidth = 2.5;
-	ctx.strokeStyle = INK;
-	strokeRect(ctx, contentLeft, frameTop, contentW, frameBottom - frameTop);
 	ctx.textAlign = 'center';
 	ctx.fillStyle = accentInk;
 	ctx.font = `700 ${valFont}px ${monoStack()}`;
@@ -190,7 +184,7 @@ export async function renderWrappedCard(
 	ctx.fillStyle = MUTED;
 	ctx.font = `700 ${compact ? 22 : 26}px ${monoStack()}`;
 	drawTracked(ctx, input.headline.label.toUpperCase(), midX, labelY, 3, 'center');
-	y += format === 'story' ? 150 : compact ? 92 : 110;
+	y += format === 'story' ? 150 : compact ? 96 : 116;
 
 	// Supporting stats as ledger rows (label ······· value dot leaders).
 	// Portrait trades its 4th row for the two-line quiz confrontation — with
@@ -252,26 +246,7 @@ export async function renderWrappedCard(
 		drawBarcode(ctx, contentLeft, barTop + 16, contentW, 66);
 	}
 
-	// The "source:" line rendered as the hero stamped device, above the brand.
-	const sourceSeg: { t: string; bold: boolean }[] = input.githubUsername
-		? [
-				{ t: 'github.com/', bold: false },
-				{ t: input.githubUsername, bold: true }
-			]
-		: [
-				{ t: 'source=', bold: false },
-				{ t: 'github', bold: true }
-			];
-	drawSourceStamp(
-		ctx,
-		contentLeft,
-		brandY - (compact ? 78 : 92),
-		contentW,
-		compact ? 18 : 20,
-		sourceSeg,
-		accentInk
-	);
-
+	// Brand URL — the card's single, clean attribution line.
 	ctx.textAlign = 'center';
 	ctx.fillStyle = INK;
 	ctx.font = `700 ${compact ? 26 : 30}px ${monoStack()}`;
@@ -519,50 +494,6 @@ function drawLedgerRow(
 	}
 }
 
-/** THE hero device — the machine-readable "source:" stamp. */
-function drawSourceStamp(
-	ctx: CanvasRenderingContext2D,
-	x: number,
-	y: number,
-	width: number,
-	fontPx: number,
-	segments: { t: string; bold: boolean }[],
-	boldColor: string
-) {
-	const padX = fontPx * 0.7;
-	const padY = fontPx * 0.55;
-	const rowH = fontPx + padY * 2;
-	ctx.textBaseline = 'alphabetic';
-	ctx.textAlign = 'left';
-
-	// Banded body + hairline border.
-	ctx.fillStyle = BAND;
-	ctx.fillRect(x, y, width, rowH);
-	ctx.lineWidth = 1.5;
-	ctx.strokeStyle = RULE;
-	strokeRect(ctx, x, y, width, rowH);
-
-	// Ink "SOURCE" tag.
-	ctx.font = `700 ${fontPx}px ${monoStack()}`;
-	const tag = 'SOURCE';
-	const tagW = ctx.measureText(tag).width + padX * 2;
-	ctx.fillStyle = INK;
-	ctx.fillRect(x, y, tagW, rowH);
-	ctx.fillStyle = RECEIPT;
-	ctx.font = `700 ${fontPx * 0.9}px ${monoStack()}`;
-	const baseline = y + rowH - padY - 2;
-	drawTracked(ctx, tag, x + padX, baseline, 2, 'left');
-
-	// key=value payload, value emphasised in accent ink.
-	let vx = x + tagW + padX;
-	for (const seg of segments) {
-		ctx.font = `${seg.bold ? '700' : '500'} ${fontPx}px ${monoStack()}`;
-		ctx.fillStyle = seg.bold ? boldColor : INK;
-		ctx.fillText(seg.t, vx, baseline);
-		vx += ctx.measureText(seg.t).width;
-	}
-}
-
 /** CSS-barcode style strip built from variable-width ink bars. */
 function drawBarcode(
 	ctx: CanvasRenderingContext2D,
@@ -630,12 +561,6 @@ function roundedRect(
 	ctx.arcTo(x, y + h, x, y, r);
 	ctx.arcTo(x, y, x + w, y, r);
 	ctx.closePath();
-}
-
-function strokeRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-	ctx.beginPath();
-	ctx.rect(x, y, w, h);
-	ctx.stroke();
 }
 
 function wrapText(
