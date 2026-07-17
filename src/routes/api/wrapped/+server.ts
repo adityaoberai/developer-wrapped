@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 
 	const { accessToken } = await resolveGithubAccess(account, user);
 	if (!accessToken) {
-		error(409, 'GitHub authorization is missing or expired — sign in with GitHub again.');
+		error(409, 'GitHub authorization is missing or expired. Sign in with GitHub again.');
 	}
 
 	const period = rollingYearPeriod(new Date());
@@ -40,12 +40,12 @@ export const POST: RequestHandler = async ({ locals }) => {
 	} catch (cause) {
 		if (cause instanceof GithubSyncError) {
 			if (cause.kind === 'unauthorized') {
-				error(409, 'GitHub authorization is missing or expired — sign in with GitHub again.');
+				error(409, 'GitHub authorization is missing or expired. Sign in with GitHub again.');
 			}
 			if (cause.kind === 'rate-limited') {
-				error(429, 'GitHub rate limit reached — try again in a few minutes.');
+				error(429, 'GitHub rate limit reached. Try again in a few minutes.');
 			}
-			error(503, 'GitHub is unavailable right now — try again shortly.');
+			error(503, 'GitHub is unavailable right now. Try again shortly.');
 		}
 		throw cause;
 	}

@@ -39,8 +39,15 @@
 				const subscription = await realtime.subscribe(
 					Channel.tablesdb('wrapped').table('public_shares').row(),
 					(event) => {
-						if (!event.events.some((name) => name.endsWith('.create'))) return;
 						const row = event.payload as Record<string, unknown>;
+						// Unpublishing (and republishing) deletes the share row — drop
+						// the entry live instead of showing a dead link until reload.
+						if (event.events.some((name) => name.endsWith('.delete'))) {
+							const slug = (row.share_slug as string) || (row.$id as string);
+							if (slug) items = items.filter((i) => i.share_slug !== slug);
+							return;
+						}
+						if (!event.events.some((name) => name.endsWith('.create'))) return;
 						let contributions: number;
 						try {
 							contributions = (JSON.parse(row.metrics_json as string) as { contributions: number })
@@ -112,7 +119,7 @@
 			Nobody has published a Wrapped yet. <a href="/">Be the first</a> — set the tone for everyone else.
 		</p>
 	{:else}
-		<ul class="feed" aria-live="polite" aria-relevant="additions">
+		<ul class="feed" aria-live="polite" aria-relevant="additions removals">
 			{#each items as item (item.share_slug)}
 				{@const archetype = item.archetype_id ? getArchetype(item.archetype_id) : null}
 				<li class="fade-up">

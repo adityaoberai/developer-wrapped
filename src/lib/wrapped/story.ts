@@ -26,7 +26,7 @@ export function deriveGithubArchetype(metrics: WrappedMetrics): GithubVerdict {
 		return {
 			archetypeId: 'pipelineWhisperer',
 			reason: {
-				text: `You reviewed ${totals.reviews.toLocaleString('en-US')} pull requests — as many as (or more than) you opened. The process IS the product.`,
+				text: `You reviewed ${totals.reviews.toLocaleString('en-US')} pull requests, as many as (or more than) you opened. The process IS the product.`,
 				source: `reviews=${totals.reviews}, pull_requests=${totals.pullRequests}`
 			}
 		};
@@ -50,7 +50,7 @@ export function deriveGithubArchetype(metrics: WrappedMetrics): GithubVerdict {
 		return {
 			archetypeId: 'productionCowboy',
 			reason: {
-				text: `Friday is your busiest day — ${metrics.busiestWeekday.contributions.toLocaleString('en-US')} contributions. Bold. Very bold.`,
+				text: `Friday is your busiest day with ${metrics.busiestWeekday.contributions.toLocaleString('en-US')} contributions. Bold. Very bold.`,
 				source: `busiest_weekday=Friday:${metrics.busiestWeekday.contributions}, commits=${totals.commits}`
 			}
 		};
@@ -94,7 +94,7 @@ export function deriveGithubArchetype(metrics: WrappedMetrics): GithubVerdict {
 		return {
 			archetypeId: 'refactorPoet',
 			reason: {
-				text: `${totals.commits.toLocaleString('en-US')} commits distilled into ${totals.pullRequests.toLocaleString('en-US')} pull requests — roughly ${Math.round(totals.commits / totals.pullRequests)} commits of polish per PR.`,
+				text: `${totals.commits.toLocaleString('en-US')} commits distilled into ${totals.pullRequests.toLocaleString('en-US')} pull requests, roughly ${Math.round(totals.commits / totals.pullRequests)} commits of polish per PR.`,
 				source: `commits=${totals.commits}, pull_requests=${totals.pullRequests}`
 			}
 		};
@@ -103,7 +103,7 @@ export function deriveGithubArchetype(metrics: WrappedMetrics): GithubVerdict {
 	return {
 		archetypeId: 'vibeCoder',
 		reason: {
-			text: `${totals.contributions.toLocaleString('en-US')} contributions across ${metrics.activeDays} active days, spread evenly across everything. No dominant pattern detected — suspiciously smooth.`,
+			text: `${totals.contributions.toLocaleString('en-US')} contributions across ${metrics.activeDays} active days, spread evenly across everything. No dominant pattern detected. Suspiciously smooth.`,
 			source: `contributions=${totals.contributions}, active_days=${metrics.activeDays}`
 		}
 	};
@@ -153,14 +153,14 @@ export function pickObservation(metrics: WrappedMetrics): EvidenceClaim {
 
 	if (totals.restricted > totals.contributions) {
 		return {
-			text: `More of your work is private (${totals.restricted.toLocaleString('en-US')} contributions) than public. Mysterious. We respect it. We counted it anyway — as a number, nothing else.`,
+			text: `More of your work is private (${totals.restricted.toLocaleString('en-US')} contributions) than public. Mysterious. We respect it. We counted it anyway, as a number, nothing else.`,
 			source: `restricted=${totals.restricted}, public_calendar=${totals.contributions}`
 		};
 	}
 
 	if (metrics.activeDays > 0 && metrics.activeDays < metrics.period.days * 0.15) {
 		return {
-			text: `You shipped on just ${metrics.activeDays} of ${metrics.period.days} days — but still racked up ${totals.contributions.toLocaleString('en-US')} contributions. Efficiency? Or chaos in short bursts?`,
+			text: `You shipped on just ${metrics.activeDays} of ${metrics.period.days} days, but still racked up ${totals.contributions.toLocaleString('en-US')} contributions. Efficiency? Or chaos in short bursts?`,
 			source: `active_days=${metrics.activeDays}/${metrics.period.days}`
 		};
 	}

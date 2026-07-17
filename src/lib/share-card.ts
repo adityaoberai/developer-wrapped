@@ -35,6 +35,9 @@ export interface WrappedCardInput {
 	stats: { value: string; label: string }[];
 	archetypeName?: string;
 	archetypeEmoji?: string;
+	/** Quiz self-assessment; when present the card shows "You said vs. GitHub says". */
+	quizArchetypeName?: string;
+	quizArchetypeEmoji?: string;
 	gradient: [string, string];
 	/** Clear brand URL printed on every card, e.g. "wrapped.dev.example". */
 	brandUrl: string;
@@ -130,8 +133,11 @@ export async function renderWrappedCard(
 	ctx.fillText(input.headline.label, w / 2, y);
 	y += format === 'story' ? 150 : compact ? 92 : 110;
 
-	// Supporting stats.
-	const stats = input.stats.slice(0, compact ? 3 : 4);
+	// Supporting stats. Portrait trades its 4th row for the two-line quiz
+	// confrontation — with all four the bottom cluster collides with the
+	// bottom-anchored brand URL (1350px leaves ~108px of slack).
+	const statCount = compact || (format === 'portrait' && input.quizArchetypeName) ? 3 : 4;
+	const stats = input.stats.slice(0, statCount);
 	ctx.textAlign = 'left';
 	const rowH = format === 'story' ? 84 : compact ? 66 : 74;
 	for (const stat of stats) {
@@ -146,12 +152,22 @@ export async function renderWrappedCard(
 		y += rowH;
 	}
 
-	// Archetype line (story/portrait have room for it).
+	// Archetype line(s) — story/portrait have room for them. With a quiz result
+	// the card carries the full confrontation; without one, just the verdict.
 	if (input.archetypeName && !compact) {
 		y += 12;
 		ctx.textAlign = 'center';
 		ctx.fillStyle = '#cbd5e1';
 		ctx.font = `600 34px ${fontStack()}`;
+		if (input.quizArchetypeName) {
+			ctx.fillText(
+				`${input.quizArchetypeEmoji ?? ''} You said: ${input.quizArchetypeName}`.trim(),
+				w / 2,
+				y,
+				w - 200
+			);
+			y += 46;
+		}
 		ctx.fillText(
 			`${input.archetypeEmoji ?? ''} GitHub says: ${input.archetypeName}`.trim(),
 			w / 2,

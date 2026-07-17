@@ -3,7 +3,7 @@
 		"id": "productionCowboy",
 		"name": "The Production Cowboy",
 		"tagline": "Deploys on Friday at 4:59 PM. Sleeps like a baby.",
-		"roast": "You've never met a Friday deploy you didn't like. Tests are for people who doubt themselves — and you have never doubted anything in your life. Your users are your QA team; they just don't know it yet.",
+		"roast": "You've never met a Friday deploy you didn't like. Tests are for people who doubt themselves, and you have never doubted anything in your life. Your users are your QA team; they just don't know it yet.",
 		"traits": [
 			"Ships first, asks questions never",
 			"Believes staging is a state of mind",
@@ -17,7 +17,7 @@
 		"id": "refactorPoet",
 		"name": "The Refactor Poet",
 		"tagline": "It worked fine. That was the problem.",
-		"roast": "The feature shipped three weeks ago, but you're still in there, renaming data to payload to envelope and back to data. You don't write code — you curate it. Somewhere, a product manager is quietly crying.",
+		"roast": "The feature shipped three weeks ago, but you're still in there, renaming data to payload to envelope and back to data. You don't write code; you curate it. Somewhere, a product manager is quietly crying.",
 		"traits": [
 			"Renames variables for emotional clarity",
 			"Strong opinions about whitespace",
@@ -87,7 +87,7 @@
 		"id": "pipelineWhisperer",
 		"name": "The Pipeline Whisperer",
 		"tagline": "Spent six hours automating a four-second task.",
-		"roast": "You've automated your builds, your deploys, your commit messages, and — quietly — parts of your personality. The pipeline is green, the YAML is immaculate, and nobody, including you, remembers what the product does.",
+		"roast": "You've automated your builds, your deploys, your commit messages, and, quietly, parts of your personality. The pipeline is green, the YAML is immaculate, and nobody, including you, remembers what the product does.",
 		"traits": [
 			"Speaks fluent YAML",
 			"CI is green or life is meaningless",

@@ -24,7 +24,7 @@
 
 	const shareUrl = $derived(`${page.url.origin}/w/${share.share_slug}`);
 	const shareText = $derived(
-		`${name} made ${share.metrics.contributions.toLocaleString('en-US')} contributions on GitHub (${periodLabel(share.period_start, share.period_end)}) — Developer Wrapped`
+		`${name} made ${share.metrics.contributions.toLocaleString('en-US')} contributions on GitHub (${periodLabel(share.period_start, share.period_end)}) | Developer Wrapped`
 	);
 
 	function fmt(n: number): string {

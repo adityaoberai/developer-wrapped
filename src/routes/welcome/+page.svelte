@@ -15,7 +15,7 @@
 </script>
 
 <Seo
-	title="Ready when you are — Developer Wrapped"
+	title="Ready when you are | Developer Wrapped"
 	description="Start your Developer Wrapped: eight questions between you and an uncomfortably accurate diagnosis."
 	noindex
 />
@@ -33,7 +33,7 @@
 		<p class="eyebrow">Well, well, well</p>
 		<h1>Hey, {data.profile.display_name || data.profile.github_username || 'developer'} 👋</h1>
 		<p class="muted lead">
-			Your last 12 months on GitHub started testifying the moment you signed in — aggregate
+			Your last 12 months on GitHub started testifying the moment you signed in: aggregate
 			contribution counts for an exact period, never your code, all private until you choose to
 			publish. The quiz adds an optional "you said vs. GitHub says" confrontation. Two minutes, only
 			slightly judgmental.

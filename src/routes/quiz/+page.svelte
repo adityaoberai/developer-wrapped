@@ -169,7 +169,7 @@
 </script>
 
 <Seo
-	title="The eight questions — Developer Wrapped"
+	title="The eight questions | Developer Wrapped"
 	description="Answer eight uncomfortably accurate questions about how you really build software."
 	noindex
 />
@@ -257,13 +257,13 @@
 
 		{#if saveError}
 			<p class="save-error" role="alert">
-				That answer didn't save — check your connection and tap it again.
+				That answer didn't save. Check your connection and tap it again.
 			</p>
 		{/if}
 
 		{#if finishError}
 			<div class="save-error" role="alert">
-				<p>Your answers are safe — we just couldn't seal the verdict. Try again.</p>
+				<p>Your answers are safe; we just couldn't seal the verdict. Try again.</p>
 				<button class="retry" type="button" onclick={advance}>Retry</button>
 			</div>
 		{/if}

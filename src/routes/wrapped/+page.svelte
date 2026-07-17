@@ -98,7 +98,7 @@
 						// No GitHub token on file — the background sync can never land,
 						// so show the reconnect prompt instead of polling out the clock.
 						needsReconnect = true;
-						syncError = 'GitHub authorization is missing or expired — sign in with GitHub again.';
+						syncError = 'GitHub authorization is missing or expired. Sign in with GitHub again.';
 						syncing = false;
 						return;
 					}
@@ -211,7 +211,7 @@
 			actionStatus = 'Share link copied to the clipboard.';
 			setTimeout(() => (copied = false), 2000);
 		} catch {
-			actionStatus = 'Could not copy — copy the link from the address bar instead.';
+			actionStatus = 'Could not copy. Copy the link from the address bar instead.';
 		}
 	}
 
@@ -220,9 +220,53 @@
 	let cardBusy = $state(false);
 	let cardError = $state(false);
 	let canNativeShare = $state(false);
+	let cardPreviewUrl = $state<string | null>(null);
+	// The format that produced the displayed image — the preview box tracks
+	// this, not the live selection, so the frame never mismatches its picture
+	// while a re-render is in flight.
+	let previewFormat = $state<CardFormat | null>(null);
+	let previewPending = $state(false);
+	// Monotonic token: only the latest render may publish its object URL, so a
+	// slow story render can't overwrite a newer square one.
+	let previewToken = 0;
 
 	onMount(() => {
 		canNativeShare = typeof navigator.share === 'function';
+		return () => {
+			previewToken += 1;
+			if (cardPreviewUrl) URL.revokeObjectURL(cardPreviewUrl);
+		};
+	});
+
+	const PREVIEW_RATIOS: Record<CardFormat, string> = {
+		story: '9 / 16',
+		portrait: '4 / 5',
+		square: '1 / 1'
+	};
+	const previewShownFormat = $derived(previewFormat ?? cardFormat);
+
+	// Live preview of the exact PNG the download/share buttons produce,
+	// re-rendered whenever the verdict slide is visible and the format,
+	// metrics, or quiz result changes.
+	$effect(() => {
+		const format = cardFormat;
+		const onVerdictSlide = slide === TOTAL_SLIDES - 1;
+		const input = metrics && githubArchetype ? cardInput() : null;
+		if (!onVerdictSlide || !input) return;
+		const token = ++previewToken;
+		previewPending = true;
+		void renderWrappedCard(input, format)
+			.then((blob) => {
+				if (token !== previewToken) return;
+				if (cardPreviewUrl) URL.revokeObjectURL(cardPreviewUrl);
+				cardPreviewUrl = URL.createObjectURL(blob);
+				previewFormat = format;
+				previewPending = false;
+			})
+			.catch(() => {
+				// Preview is best-effort; download/share surface real errors.
+				if (token === previewToken) previewPending = false;
+			});
 	});
 
 	function cardInput() {
@@ -241,6 +285,10 @@
 			],
 			archetypeName: githubArchetype.name,
 			archetypeEmoji: githubArchetype.emoji,
+			// The quiz self-assessment turns the card's verdict line into the
+			// full "you said vs. GitHub says" confrontation when available.
+			quizArchetypeName: quizArchetype?.name,
+			quizArchetypeEmoji: quizArchetype?.emoji,
 			gradient: githubArchetype.gradient,
 			brandUrl: page.url.host
 		};
@@ -289,7 +337,7 @@
 </script>
 
 <Seo
-	title="Your Wrapped — Developer Wrapped"
+	title="Your Wrapped | Developer Wrapped"
 	description="A private, evidence-backed story about your last 12 months on GitHub."
 	noindex
 />
@@ -306,7 +354,7 @@
 			<div class="orb" aria-hidden="true"></div>
 			<h1 class="pulse">Interviewing your commits…</h1>
 			<p class="muted">
-				Collecting 12 months of aggregate contribution data from GitHub. Counts only — never your
+				Collecting 12 months of aggregate contribution data from GitHub. Counts only, never your
 				code.
 			</p>
 		</main>
@@ -459,7 +507,7 @@
 								{/each}
 							</ul>
 							<p class="muted">
-								Public repositories only — private ones stay uncounted and unnamed.
+								Public repositories only; private ones stay uncounted and unnamed.
 							</p>
 						{:else}
 							<p class="hero-line">No public language data this year. A ghost. Respect.</p>
@@ -530,7 +578,7 @@
 									<p class="publish-copy muted">
 										Publishing creates a public link showing your name, avatar, the reporting
 										period, and these stats: contributions, active days, pull requests, reviews,
-										issues, longest streak, busiest month, and top languages. Nothing else — and you
+										issues, longest streak, busiest month, and top languages. Nothing else, and you
 										can unpublish at any time.
 									</p>
 									<button
@@ -564,10 +612,27 @@
 								</div>
 							{/if}
 							{#if publishError}
-								<p class="card-error" role="alert">That didn't go through — try again.</p>
+								<p class="card-error" role="alert">That didn't go through. Try again.</p>
 							{/if}
 
 							<div class="card-controls">
+								<div
+									class="card-preview"
+									style:aspect-ratio={PREVIEW_RATIOS[previewShownFormat]}
+									class:card-preview--wide={previewShownFormat === 'square'}
+									class:card-preview--updating={previewPending && Boolean(cardPreviewUrl)}
+								>
+									{#if cardPreviewUrl}
+										<img
+											src={cardPreviewUrl}
+											alt="Share card preview, {CARD_FORMATS.find(
+												(f) => f.id === previewShownFormat
+											)?.label} format"
+										/>
+									{:else}
+										<p class="card-preview-loading" role="status">Rendering preview…</p>
+									{/if}
+								</div>
 								<div class="formats" role="radiogroup" aria-label="Share card format">
 									{#each CARD_FORMATS as format (format.id)}
 										<button
@@ -602,7 +667,7 @@
 									</button>
 								{/if}
 								{#if cardError}
-									<p class="card-error" role="alert">Couldn't render the card — try again.</p>
+									<p class="card-error" role="alert">Couldn't render the card. Try again.</p>
 								{/if}
 							</div>
 
@@ -952,6 +1017,42 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+
+	.card-preview {
+		align-self: center;
+		height: clamp(14rem, 38vh, 20rem);
+		max-width: 100%;
+		border: 1px solid var(--border-dim);
+		border-radius: var(--radius-md);
+		background: color-mix(in srgb, var(--bg-raised) 82%, transparent);
+		overflow: hidden;
+		display: grid;
+		place-items: center;
+	}
+
+	.card-preview--wide {
+		height: clamp(12rem, 32vh, 17rem);
+	}
+
+	.card-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		display: block;
+		transition: opacity 150ms ease;
+	}
+
+	.card-preview--updating img {
+		opacity: 0.55;
+	}
+
+	.card-preview-loading {
+		padding: 1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--muted);
+		animation: pulse-soft 1.4s ease-in-out infinite;
 	}
 
 	.formats {

@@ -8,7 +8,7 @@
 			{
 				"id": "b",
 				"emoji": "🖋️",
-				"label": "Hold it until Monday — I want to rewrite it beautifully first."
+				"label": "Hold it until Monday. I want to rewrite it beautifully first."
 			},
 			{
 				"id": "c",
@@ -84,7 +84,7 @@
 			{
 				"id": "d",
 				"emoji": "🎨",
-				"label": "Unclear — I spent the weekend theming my terminal instead."
+				"label": "Unclear. I spent the weekend theming my terminal instead."
 			}
 		],
 		"weights": {
@@ -137,7 +137,7 @@
 			{
 				"id": "c",
 				"emoji": "🔮",
-				"label": "Zero docs tabs — the model reads the docs so I don't have to."
+				"label": "Zero docs tabs. The model reads the docs so I don't have to."
 			},
 			{
 				"id": "d",
@@ -160,7 +160,7 @@
 			{
 				"id": "a",
 				"emoji": "📱",
-				"label": "'LGTM 🚀' — sent from my phone, 40 seconds after they asked."
+				"label": "'LGTM 🚀', sent from my phone, 40 seconds after they asked."
 			},
 			{
 				"id": "b",

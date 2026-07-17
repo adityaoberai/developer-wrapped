@@ -4,7 +4,7 @@
 </script>
 
 <Seo
-	title="The eight archetypes — Developer Wrapped"
+	title="The eight archetypes | Developer Wrapped"
 	description="Meet all eight developer archetypes: from the Production Cowboy to the Vibe Coder. Which one are you?"
 />
 

@@ -7,7 +7,7 @@
 </script>
 
 <Seo
-	title="{page.status === 404 ? 'Page not found' : 'Something broke'} — Developer Wrapped"
+	title="{page.status === 404 ? 'Page not found' : 'Something broke'} | Developer Wrapped"
 	description="This page took a wrong turn. Head back to Developer Wrapped and find out what kind of developer you really are."
 	noindex
 />

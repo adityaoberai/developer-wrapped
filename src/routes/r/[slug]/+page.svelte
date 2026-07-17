@@ -118,7 +118,7 @@
 <Seo
 	title="{data.result.display_name ||
 		data.result.github_username ||
-		'A developer'} is {archetype.name} — Developer Wrapped"
+		'A developer'} is {archetype.name} | Developer Wrapped"
 	description="{archetype.tagline} Find out what kind of developer you really are in eight uncomfortably accurate questions."
 	image="/og?slug={data.result.share_slug}"
 />
@@ -153,7 +153,7 @@
 				<p class="publish-title">Your result is private</p>
 				<p class="publish-copy muted">
 					Only you can see this page. Publishing makes this link work for anyone and shows your
-					archetype, name, and avatar on the public feed — nothing else. You can make it private
+					archetype, name, and avatar on the public feed, nothing else. You can make it private
 					again at any time.
 				</p>
 				<button
@@ -172,7 +172,7 @@
 			</button>
 			{#if copyError}
 				<p class="card-error" role="alert">
-					Couldn't copy the link — copy it from the address bar.
+					Couldn't copy the link. Copy it from the address bar.
 				</p>
 			{/if}
 			{#if canNativeShare}
@@ -190,7 +190,7 @@
 			{cardBusy ? 'Rendering card…' : 'Download share card'}
 		</button>
 		{#if cardError}
-			<p class="card-error" role="alert">Couldn't render the card image — try again.</p>
+			<p class="card-error" role="alert">Couldn't render the card image. Try again.</p>
 		{/if}
 
 		{#if data.isOwner}
@@ -207,7 +207,7 @@
 			{/if}
 			<a class="btn btn--ghost" href="/quiz">Retake the quiz</a>
 			{#if visibilityError}
-				<p class="card-error" role="alert">Couldn't update result visibility — try again.</p>
+				<p class="card-error" role="alert">Couldn't update result visibility. Try again.</p>
 			{/if}
 		{:else}
 			<a class="btn btn--ghost" href="/">Get your own Wrapped</a>
