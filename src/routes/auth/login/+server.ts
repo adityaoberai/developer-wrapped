@@ -3,10 +3,14 @@ import { createGuestClient } from '$lib/server/appwrite';
 import { redirect } from '@sveltejs/kit';
 import { randomBytes } from 'node:crypto';
 import { AppwriteException, OAuthProvider } from 'node-appwrite';
-import { OAUTH_STATE_COOKIE, OAUTH_STATE_TTL_SECONDS } from '../oauth.server';
+import {
+	OAUTH_STATE_COOKIE,
+	OAUTH_STATE_TTL_SECONDS,
+	resolveOauthRedirectOrigin
+} from '../oauth.server';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ cookies, url }) => {
+export const GET: RequestHandler = async ({ cookies, request, url }) => {
 	const state = randomBytes(32).toString('base64url');
 	cookies.set(OAUTH_STATE_COOKIE, state, {
 		path: '/auth/callback',
@@ -16,7 +20,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		maxAge: OAUTH_STATE_TTL_SECONDS
 	});
 
-	const callback = new URL('/auth/callback', url.origin);
+	const callback = new URL('/auth/callback', resolveOauthRedirectOrigin(request, url));
 	callback.searchParams.set('state', state);
 	const failure = new URL(callback);
 	failure.searchParams.set('error', 'oauth_failed');
