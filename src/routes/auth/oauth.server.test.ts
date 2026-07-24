@@ -14,42 +14,32 @@ describe('matchesOauthState', () => {
 });
 
 describe('resolveOauthRedirectOrigin', () => {
-	it('uses the request url origin when no forwarded host is present', () => {
-		const request = new Request('http://internal.local/auth/login');
+	it('uses the request url origin when no configured origin is present', () => {
 		const url = new URL('http://internal.local/auth/login');
-		expect(resolveOauthRedirectOrigin(request, url)).toBe('http://internal.local');
+		expect(resolveOauthRedirectOrigin(url)).toBe('http://internal.local');
 	});
 
-	it('prefers forwarded host and protocol when provided', () => {
-		const request = new Request('http://internal.local/auth/login', {
-			headers: {
-				'x-forwarded-host': 'app.example.com',
-				'x-forwarded-proto': 'https'
-			}
-		});
+	it('uses the configured origin when provided', () => {
 		const url = new URL('http://internal.local/auth/login');
-		expect(resolveOauthRedirectOrigin(request, url)).toBe('https://app.example.com');
+		expect(resolveOauthRedirectOrigin(url, 'https://app.example.com')).toBe(
+			'https://app.example.com'
+		);
 	});
 
-	it('uses the first forwarded values when multiple are present', () => {
-		const request = new Request('http://internal.local/auth/login', {
-			headers: {
-				'x-forwarded-host': 'app.example.com, internal.local',
-				'x-forwarded-proto': 'https, http'
-			}
-		});
+	it('normalizes a configured origin that includes a path', () => {
 		const url = new URL('http://internal.local/auth/login');
-		expect(resolveOauthRedirectOrigin(request, url)).toBe('https://app.example.com');
+		expect(resolveOauthRedirectOrigin(url, 'https://app.example.com/some/path?foo=bar')).toBe(
+			'https://app.example.com'
+		);
 	});
 
-	it('falls back when forwarded host is invalid', () => {
-		const request = new Request('http://internal.local/auth/login', {
-			headers: {
-				'x-forwarded-host': 'bad/host',
-				'x-forwarded-proto': 'https'
-			}
-		});
+	it('falls back when configured origin is invalid', () => {
 		const url = new URL('http://internal.local/auth/login');
-		expect(resolveOauthRedirectOrigin(request, url)).toBe('http://internal.local');
+		expect(resolveOauthRedirectOrigin(url, 'not a url')).toBe('http://internal.local');
+	});
+
+	it('falls back when configured origin uses an unsupported protocol', () => {
+		const url = new URL('http://internal.local/auth/login');
+		expect(resolveOauthRedirectOrigin(url, 'ftp://app.example.com')).toBe('http://internal.local');
 	});
 });
