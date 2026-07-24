@@ -59,7 +59,7 @@ The `github` provider is enabled in the Appwrite console (Auth → Settings → 
 https://sgp.cloud.appwrite.io/v1/account/sessions/oauth2/callback/github/developer-wrapped
 ```
 
-The app's own success/failure URLs are derived from the request origin at runtime, so localhost and production both work without config changes. The login route requests only the `read:user` scope.
+The app's own success/failure URLs are derived from request origin by default. For proxied deployments, set `APP_OAUTH_ORIGIN` (for example `https://your-public-domain.com`) so redirects always use the public host. The login route requests only the `read:user` scope.
 
 ## Commands
 
